@@ -1,0 +1,78 @@
+---
+title: "Marathon Data"
+author: "Sturdivant and Clark"
+date: '2022-08-03'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting Data
+
+Code to get data from wikipedia
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(lubridate)
+theme_set(theme_bw())
+
+url = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
+
+marathon_html = read_html(url)
+
+marathon_html %>%
+  html_nodes(css = "table")
+
+
+record_table = 
+  marathon_html %>% 
+  html_nodes(css = "table") %>%
+  nth(1) %>%
+  html_table(fill = TRUE)
+
+print(record_table)
+
+
+record_table_mod = 
+  record_table %>%
+  mutate(Time_t = hms(Time))%>%
+  mutate(Time_sec = period_to_seconds(Time_t))
+
+diff(record_table_mod$Time_t)
+
+
+record_table_mod = 
+  record_table_mod %>%
+  mutate(Date_ymd = mdy(Date))
+
+
+record_table_mod$Date_ymd[5] = "1909-05-10"
+
+days_between = as.numeric(diff(record_table_mod$Date_ymd))
+
+
+hist(days_between)
+
+record_table_mod %>% ggplot() +
+  geom_line(aes(x=Date_ymd, y=Time_sec, color = "Record in Seconds"),size=2) + 
+  scale_color_manual(name="", 
+                     values = c("Record in Seconds"="#00ba38")) + 
+  theme(panel.grid.minor = element_blank()) 
+
+
+record_table_mod$end = c(record_table_mod$Date_ymd[-1],"2022-08-01")
+
+
+ggplot() + 
+  geom_segment(data=record_table_mod, aes(x=Date_ymd,xend=end,y=Time_sec,yend=Time_sec),size=2) + 
+  ylab("Time in Seconds")+
+  xlab("Marathon Record")+
+  geom_rug(data=record_table_mod,aes(x=Date_ymd,y=Time_sec,),sides="b")
+
+
+
+```
+
