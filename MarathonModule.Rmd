@@ -9,11 +9,15 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Motivational Video
+
+### Are we living in a time of records?
+### How can we address this question?
+### What would randomness look like?
+
 ## Getting Data
 
-Code to get data from wikipedia
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(rvest)
 library(lubridate)
@@ -75,4 +79,11 @@ ggplot() +
 
 
 ```
+
+
+Questions to explore:
+
+Are there issues with the data?
+What is our response variable? What type of data is it?
+
 
