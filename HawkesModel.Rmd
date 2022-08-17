@@ -1,0 +1,54 @@
+---
+title: "HawkesModel"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r package loading, include=FALSE}
+library("hawkesbow")
+library(readr)
+
+```
+
+
+## Fitting Hawkes model to marathon record data
+
+Produce estimates for model, exponential Hawkes process, using MLE: 
+- baseline intensity,
+- reproduction mean  
+- exponential fertility function rate
+
+Note:  data is in days from the first world record which is set as time 0.  The 
+
+```{r, warning = FALSE}
+record_table_mod<-read_rds("record_table_mod.rds")
+
+days_between = as.numeric(diff(record_table_mod$Date_ymd))
+daysfromstart <- cumsum(days_between)
+daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
+
+optMarathon<-mle(daysfromstart,"Exponential",40300)  # end date picked number greater than longest times
+optMarathon$par
+summary(optMarathon)
+optMarathon$events
+optMarathon$end
+
+
+
+```
+
+## Simulation using Hawkes model with MLE parameter estimates from data
+
+Simulation for the same number of days used in the estimation.
+
+```{r}
+simRecs <- hawkes(40300, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                  family = "exp", rate = optMarathon$par[3]) 
+plot(simRecs, intensity = FALSE)
+plot(simRecs, intensity = TRUE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
