@@ -101,12 +101,14 @@ Does the time between marathon records appear random?  Are there historical "tim
 When (if ever) would you predict a sub 2 hour marathon?
 Is there a limit to the fastest marathon in the future?  If so, how fast?
 
+## Exploring the Data
+
 
 ## Developing a Model
 
 ### Poisson Process 
 
-"A Poisson Process is a model for a series of discrete events where the average time between events is known, but the exact timing of events is random" meeting the folling criteria: 
+"A Poisson Process is a model for a series of discrete events where the average time between events is known, but the exact timing of events is random" meeting the following criteria: 
 https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
 
 -  Events are independent of each other. The occurrence of one event does not affect the probability another event will occur.
@@ -178,4 +180,6 @@ ad.test(days_between,"pexp",rate=exprate,estimated = TRUE)
 
 
 ## Using and Interpreting the Model
+
+## Communicating Results
 
