@@ -15,6 +15,7 @@ library(MASS)
 library(Hmisc)
 library(DescTools)
 library(goftest)
+library(readr)
 
 ```
 ## Motivational Video
