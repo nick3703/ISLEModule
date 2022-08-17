@@ -21,7 +21,11 @@ Produce estimates for model, exponential Hawkes process, using MLE:
 - reproduction mean  
 - exponential fertility function rate
 
-Note:  data is in days from the first world record which is set as time 0.  The 
+Note:  data is in days from the first world record which is set as time 0.  The model is fit through day 40,300 (the last record is at day 40,231).
+
+Three parameter estimates are first output. 
+
+NOTE:  the results change if one doesn't set a seed...and by more than I would expect!!!!  Maybe need to set starting values or something to ensure optimal?
 
 ```{r, warning = FALSE}
 record_table_mod<-read_rds("record_table_mod.rds")
@@ -30,25 +34,84 @@ days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
 
+set.seed(86)
 optMarathon<-mle(daysfromstart,"Exponential",40300)  # end date picked number greater than longest times
 optMarathon$par
 summary(optMarathon)
 optMarathon$events
 optMarathon$end
 
+optMarathon$model$param
+optMarathon$model$mean()  # expected value
+optMarathon$model$dmean()  # Jacobian matrix of expected value
+optMarathon$model$ddmean()  # Hessian matrix of expected value
+optMarathon$model$loglik(daysfromstart, optMarathon$end)  #  log-likelihood
+optMarathon$model$dloglik(daysfromstart, optMarathon$end)  # Jacobian matrix of log-lik
+optMarathon$model$ddloglik(daysfromstart, optMarathon$end) # hessian matrix of log-lik
+
 
 
 ```
+### Residuals
+
+From the help:
+"Outputs the residuals (values of the compensator at the times of arrival) of a Hawkes process. Useful function for diagnosis through the random time change theorem: the residuals should follow a unit rate Poisson process"
+Based on the example in the help I assume should follow the y=x line...we see divergence here suggesting an issue (in what direction?)
+
+```{r}
+
+resid<-residuals(daysfromstart, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                  family = "exp", rate = optMarathon$par[3])
+resid
+plot(resid)
+abline(0, 1, col="red", lty="dashed")
+
+```
+
+### Compensator
+
+From the help: the compensator (integrated intensity) of a Hawkes process...kind of cool, can see how the events (world records) up the intensity.  Event times are the plus symbols plotted below the intensity function line.
+
+```{r}
+
+compensate<-compensator(daysfromstart, t=0:40300, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                  family = "exp", rate = optMarathon$par[3])
+plot(c(0:40300),compensate,main="Full time period", type = "l")
+points(daysfromstart,rep(0,length(daysfromstart)), pch=3)
+
+compensate1<-compensator(daysfromstart, t=0:4000, fun = optMarathon$par[1], repr = optMarathon$par[2],
+                  family = "exp", rate = optMarathon$par[3])
+plot(c(0:4000),compensate1,main="First 4000 days", type = "l")
+points(daysfromstart,rep(0,length(daysfromstart)), pch=3)
+
+compensate2<-compensator(daysfromstart, t=15000:20000, fun = optMarathon$par[1], repr = optMarathon$par[2],
+                  family = "exp", rate = optMarathon$par[3])
+plot(c(15000:20000),compensate2,main="Days 15,000 to 20,000", type = "l")
+points(daysfromstart,rep(26,length(daysfromstart)), pch=3)
+
+compensate3<-compensator(daysfromstart, t=19000:22000, fun = optMarathon$par[1], repr = optMarathon$par[2],
+                  family = "exp", rate = optMarathon$par[3])
+plot(c(19000:22000),compensate3,main="Days 19,000 to 22,000", type = "l")
+points(daysfromstart,rep(34,length(daysfromstart)), pch=3)
+```
+
+
 
 ## Simulation using Hawkes model with MLE parameter estimates from data
 
-Simulation for the same number of days used in the estimation.
+Simulation for the same number of days used in the estimation.  Last plot is the residuals - totally unclear to me what these are...I guess of the simulated data vs the exact values from the model?  Generally seem to follow the y=x line but some runs don't.
+
+The second  plot is the intensity - not easy to see, I think maybe a scale issue (not sure why it appears 0 with a few spikes, and to me those spikes don't correspond to plot one events). 
 
 ```{r}
-simRecs <- hawkes(40300, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+set.seed(96)
+simRecs <- hawkes(20000, fun = optMarathon$par[1], repr = optMarathon$par[2], 
                   family = "exp", rate = optMarathon$par[3]) 
 plot(simRecs, intensity = FALSE)
 plot(simRecs, intensity = TRUE)
+
+plot(residuals(simRecs))
+abline(0, 1, col="red", lty="dashed")
 ```
 
-
+test
