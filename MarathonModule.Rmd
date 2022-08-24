@@ -284,3 +284,36 @@ Questions:
 
 
 # ADVANCED:  Memoryless Property
+
+One interesting property of the exponential distribution is that it is \textit{memoryless}. What this means is that 
+
+$$P(X>x+t|X>t) = P(X>x)$$
+If $X$ represents the time until the next world record, what does this mean in context of the marathon problem?
+
+\vspace{2.in}
+
+Let's prove this property of the exponential. Start by writing out the conditional probability. Recall that the definition of conditional probability is:
+
+$$P(A|B) = \frac{P(A\cap B)}{P(B)}$$
+
+Use this to express $P(X>x+t|X>t)$ as a fraction
+
+\vspace{1.in}
+
+Now we have to think a bit. Looking at our numerator, why can we simplify it to $P(X>x+t)$?
+
+Recall that the \textbf{CDF} of a distribution is $F(a)=P(X<a)$. Therefore, can we express the numerator and the denominator as functions of the CDF?
+
+\vspace{1.in}
+
+Finally, use the fact that the CDF of the exponential is $F(t)=1-e^{-\lambda t}$ to prove that the numerator and the denominator are equal to $e^{-\lambda t}$.
+
+\vspace{1.in}
+Why does this prove the memoryless property?
+
+\vspace{1.in}
+
+Let's return to our problem. Do we think the memoryless assumption is valid? Why or why not?
+
+\vspace{2.in}
+
