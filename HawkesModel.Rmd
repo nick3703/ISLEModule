@@ -34,7 +34,7 @@ days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
 
-set.seed(86)
+set.seed(11)
 optMarathon<-mle(daysfromstart,"Exponential",40300)  # end date picked number greater than longest times
 optMarathon$par
 summary(optMarathon)
@@ -87,12 +87,12 @@ points(daysfromstart,rep(0,length(daysfromstart)), pch=3)
 compensate2<-compensator(daysfromstart, t=15000:20000, fun = optMarathon$par[1], repr = optMarathon$par[2],
                   family = "exp", rate = optMarathon$par[3])
 plot(c(15000:20000),compensate2,main="Days 15,000 to 20,000", type = "l")
-points(daysfromstart,rep(26,length(daysfromstart)), pch=3)
+points(daysfromstart,rep(19,length(daysfromstart)), pch=3)
 
 compensate3<-compensator(daysfromstart, t=19000:22000, fun = optMarathon$par[1], repr = optMarathon$par[2],
                   family = "exp", rate = optMarathon$par[3])
 plot(c(19000:22000),compensate3,main="Days 19,000 to 22,000", type = "l")
-points(daysfromstart,rep(34,length(daysfromstart)), pch=3)
+points(daysfromstart,rep(24,length(daysfromstart)), pch=3)
 ```
 
 
