@@ -1,5 +1,5 @@
 library(readr)
-
+library(hawkesbow)
 record_table_mod<-read_rds("record_table_mod.rds")
 
 days_between = as.numeric(diff(record_table_mod$Date_ymd))
@@ -11,6 +11,12 @@ daysfromstart_mod <- daysfromstart/max(daysfromstart)*100
 set.seed(21)
 optMarathon<-mle(daysfromstart_mod,"Exponential",100)  # end date picked number greater than longest times
 optMarathon$par
+
+
+compensate<-compensator(daysfromstart_mod, t=seq(0,100), fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                        family = "exp", rate = optMarathon$par[3])
+plot(c(0:100),compensate-optMarathon$par[1]*seq(0,100),main="Full time period", type = "l")
+points(daysfromstart_mod,rep(0,length(daysfromstart_mod)), pch=3)
 
 optMarathon$model$loglik(daysfromstart_mod, 100)  #  log-likelihood
 
