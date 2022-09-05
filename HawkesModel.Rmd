@@ -21,11 +21,11 @@ Produce estimates for model, exponential Hawkes process, using MLE:
 - reproduction mean  
 - exponential fertility function rate
 
-Note:  data is in days from the first world record which is set as time 0.  The model is fit through day 40,300 (the last record is at day 40,231).
+Note:  originally data was in days from the first world record which is set as time 0.  The model was fit through day 40,300 (the last record  at day 40,231).  Rescaling helps with visualization - several options, one put in years by dividing by 365.
 
 Three parameter estimates are first output. 
 
-NOTE:  the results change if one doesn't set a seed...and by more than I would expect!!!!  Maybe need to set starting values or something to ensure optimal?
+NOTE:  the results change if one doesn't set a seed...rescaling seems to help variability in that.
 
 ```{r, warning = FALSE}
 record_table_mod<-read_rds("record_table_mod.rds")
@@ -34,8 +34,17 @@ days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
 
-set.seed(11)
-optMarathon<-mle(daysfromstart,"Exponential",40300)  # end date picked number greater than longest times
+### Rescale 
+
+  # max time is 400 (about 402 days per unit)
+#daysfromstart_mod <- daysfromstart/max(daysfromstart)*100  
+#days_between_mod = diff(daysfromstart_mod)
+  # units of year
+daysfromstart_mod2 <- daysfromstart/365 
+days_between_mod2 = diff(daysfromstart_mod2)
+
+set.seed(13)
+optMarathon<-mle(daysfromstart_mod2,"Exponential",110.5)  # end date picked number greater than longest times
 optMarathon$par
 summary(optMarathon)
 optMarathon$events
@@ -60,7 +69,7 @@ Based on the example in the help I assume should follow the y=x line...we see di
 
 ```{r}
 
-resid<-residuals(daysfromstart, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], repr = optMarathon$par[2], 
                   family = "exp", rate = optMarathon$par[3])
 resid
 plot(resid)
@@ -74,38 +83,26 @@ From the help: the compensator (integrated intensity) of a Hawkes process...kind
 
 ```{r}
 
-compensate<-compensator(daysfromstart, t=0:40300, fun = optMarathon$par[1], repr = optMarathon$par[2], 
-                  family = "exp", rate = optMarathon$par[3])
-plot(c(0:40300),compensate,main="Full time period", type = "l")
-points(daysfromstart,rep(0,length(daysfromstart)), pch=3)
+compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
+                        repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
+plot(c(0:111),compensate,main="Full time period", type = "l")
+points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
-compensate1<-compensator(daysfromstart, t=0:4000, fun = optMarathon$par[1], repr = optMarathon$par[2],
-                  family = "exp", rate = optMarathon$par[3])
-plot(c(0:4000),compensate1,main="First 4000 days", type = "l")
-points(daysfromstart,rep(0,length(daysfromstart)), pch=3)
+  ### zoom in...
+plot(c(0:30),compensate[1:31],main="Year 0 to 30", type = "l" )
+points(daysfromstart_mod2[0:16],rep(0,length(daysfromstart_mod2[0:16])), pch=3)
 
-compensate2<-compensator(daysfromstart, t=15000:20000, fun = optMarathon$par[1], repr = optMarathon$par[2],
-                  family = "exp", rate = optMarathon$par[3])
-plot(c(15000:20000),compensate2,main="Days 15,000 to 20,000", type = "l")
-points(daysfromstart,rep(19,length(daysfromstart)), pch=3)
-
-compensate3<-compensator(daysfromstart, t=19000:22000, fun = optMarathon$par[1], repr = optMarathon$par[2],
-                  family = "exp", rate = optMarathon$par[3])
-plot(c(19000:22000),compensate3,main="Days 19,000 to 22,000", type = "l")
-points(daysfromstart,rep(24,length(daysfromstart)), pch=3)
 ```
-
-
 
 ## Simulation using Hawkes model with MLE parameter estimates from data
 
-Simulation for the same number of days used in the estimation.  Last plot is the residuals - totally unclear to me what these are...I guess of the simulated data vs the exact values from the model?  Generally seem to follow the y=x line but some runs don't.
+Simulation for the same number of years used in the estimation.  Last plot is the residuals - we see since from the model we simulated generally seem to follow the y=x line.
 
-The second  plot is the intensity - not easy to see, I think maybe a scale issue (not sure why it appears 0 with a few spikes, and to me those spikes don't correspond to plot one events). 
+Intensity plots with the rescaling are much easier to see.  Different seeds different results, some have second "child".
 
 ```{r}
-set.seed(96)
-simRecs <- hawkes(20000, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+set.seed(777)
+simRecs <- hawkes(110, fun = optMarathon$par[1], repr = optMarathon$par[2], 
                   family = "exp", rate = optMarathon$par[3]) 
 plot(simRecs, intensity = FALSE)
 plot(simRecs, intensity = TRUE)
@@ -114,4 +111,9 @@ plot(residuals(simRecs))
 abline(0, 1, col="red", lty="dashed")
 ```
 
-test
+
+
+
+
+
+
