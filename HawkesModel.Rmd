@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r package loading, include=FALSE}
 library("hawkesbow")
 library(readr)
-
+library(MASS)
 ```
 
 
@@ -44,7 +44,7 @@ daysfromstart_mod2 <- daysfromstart/365
 days_between_mod2 = diff(daysfromstart_mod2)
 
 set.seed(13)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",110.5)  # end date picked number greater than longest times
+optMarathon<-mle(daysfromstart_mod2,"Exponential",111)  # end date picked number greater than longest times
 optMarathon$par
 summary(optMarathon)
 optMarathon$events
@@ -112,8 +112,59 @@ abline(0, 1, col="red", lty="dashed")
 ```
 
 
+## Comparing Hawkes model to constant rate model
+
+The estimated constant rate is 0.44 using the year scaled data.  The baseline parameter rate from the Hawkes model is lower; depends slightly on the seed but around 0.396.  This makes sense - the conditional "excite" portion of the model will increase the rate at times so the baseline is set lower.  The other two parameters determine how much the rate jumps...max will be at T1-t = 0 or at (in example for seed I used) around 0.47...so an immediate doubling of the rate.  Decay is fairly rapid though (see intensity from simulation) as the parameter for the exponential decay is large (3.9). 
+
+```{r}
+expfit=fitdistr(days_between_mod2,"exponential")
+exprate<-expfit$estimate
+exprate
+
+optMarathon$par
+optMarathon$par[2]*optMarathon$par[3]
+
+```
+
+CONSTANT MODEL compensator and residual plot are shown below.  Note the features of Hawkesbow package make it easy to do this...simply set the baseline rate to the rate estimated for the Poisson process model and set the other two rates to 0.
+
+```{r}
+compensate_const<-compensator(daysfromstart_mod2, t=0:111, fun = exprate, repr = 0, 
+                        family = "exp", rate = 0)
+plot(c(0:111),compensate_const,main="Full time period", type = "l")
+resid_const<-residuals(daysfromstart_mod2, fun = exprate, repr = 0, 
+                 family = "exp", rate = 0)
+plot(resid_const)
+abline(0, 1, col="red", lty="dashed")
 
 
+```
 
+Residual comparison is below.  We see Hawkes model generally  better but maybe not by a "significant" amount?
+
+```{r}
+plot(resid_const)
+abline(0, 1, col="red", lty="dashed")
+points(resid, col ="blue", pch = 4)
+legend(1, 45, legend=c("Constant Rate", "Hawkes"),
+       col=c("black", "blue"), pch=c(1,4))
+```
+
+## Simulations from both models
+
+An example of simulations based on the two models - 100 years here.  We can see the intensity roughly doubling in the Hawkes process.  
+
+```{r}
+set.seed(777)
+simRecs_const <- hawkes(100, fun = exprate, repr = 0, family = "exp", rate = 0) 
+#plot(simRecs_const, intensity = FALSE)
+plot(simRecs_const, intensity = TRUE)
+
+set.seed(777)
+simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
+plot(simRecs_Hawkes, intensity = FALSE)
+plot(simRecs_Hawkes, intensity = TRUE)
+
+```
 
 
