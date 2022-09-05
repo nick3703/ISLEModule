@@ -194,7 +194,114 @@ PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate))
 
 # What are the poorly fit points?
 
-LOOK BACK AT THE ORIGINAL DATA HERE...LONGEST TIMES BETWEEN EVENTS (I THINK)...ONE IS WW2 PRETTY SURE...THE OTHER NEED TO LOOK AGAIN - MAYBE AN UNUSUALLY LARGE LOWERING OF THE RECORD OR SOMETHING?
+LOOK BACK AT THE ORIGINAL DATA HERE...LONGEST TIMES BETWEEN EVENTS (I THINK - NEED TO LOOK MORE CLOSELY)...ONE IS WW2 PRETTY SURE...THE OTHER NEED TO LOOK AGAIN - MAYBE AN UNUSUALLY LARGE LOWERING OF THE RECORD OR SOMETHING?
+
+# A "Self-Exciting" Model
+
+## Hawkes Processes
+
+- Let $H_t$ be the history of events up to time $t$.  The Hawkes (1971) model of the conditional intensity is:
+
+$$\lambda(t|H_t) = \nu + \sum_{i:t_i<t} g(t - t_i)$$
+where $\nu$ is the background rate of events and g is the "triggering function".
+
+- The "triggering" function can be further decomposed:
+
+$$g = \mu g^*$$
+where $g^*$ is a density function known as the "reproduction kernel" and $\mu$ is known as the "reproduction" mean.  
+
+- A common choice for the "reproduction kernel" is the exponential density given by:
+
+$$g^*(t) = \beta e^{-\beta t} $$
+
+# Fitting the model
+
+
+```{r}
+set.seed(13)
+optMarathon<-mle(daysfromstart_mod2,"Exponential",111)  # end date picked number greater than longest times
+nu = optMarathon$par[1]
+mu = optMarathon$par[2]
+b = optMarathon$par[3]
+
+```
+
+Parameter estimates for marathon data (exponential) Hawkes process, using MLE: 
+
+- baseline intensity  `r round(nu,3)`
+- reproduction mean  `r round(mu,3)`
+- exponential reproduction function rate `r round(b,3)`
+
+Note the baseline intensity is slightly lower than the constant model rate estimate of `r round(exprate,3)`
+
+The estimated reproduction function is then: 
+
+$$g(t) = \mu g^*(t) = \mu \beta e^{-\beta t} $$
+$$ = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` t} $$
+
+# Model implications
+
+```{r}
+rate0=mu*b
+```
+
+
+At the instant of the first event (world record), $t = t_1$ so $g(t - t_1 = 0)$ and the reproduction rate is:
+
+$$g(0) = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` 0} = `r round(mu,2)` * `r round(b,2)` =  `r round(rate0,3)` $$
+
+- The rate increases from the baseline rate of `r round(nu,3)` by this amount at the moment of this occurrence
+
+- The rate then decays back to baseline over time (unless a new event occurs).
+
+- Each new event "excites" the rate to increase and then decay
+
+# The Intensity Function over Time
+
+Below is based on a simulation of the intensity function over a 100 year period.  NOTE: HERE WOULD BE NICE TO SHOW FOR OUR DATA ALTHOUGH MIGHT NOT GIVE THE FULL PICTURE ANYWAY
+
+```{r}
+set.seed(777)
+simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
+
+plot(simRecs_Hawkes, intensity = TRUE)
+
+
+
+```
+
+# Intensity compared to the constant rate model
+
+```{r}
+
+plot(simRecs_Hawkes, intensity = TRUE)
+abline(a = exprate, b = 0, lty = 2, col = "blue")
+
+```
+
+
+# Process as "Generations"
+
+```{r}
+plot(simRecs_Hawkes, intensity = FALSE)
+```
+
+# The Compensator Function
+
+NEED TO WORK ON EXPLAINING - BELOW IS THE VERSION TAKING OUT BASELINE...MAYBE START WITH CONSTANT (CAN DO Poisson MODEL AND THEN THE BASELINE RATE HERE)
+
+```{r}
+
+compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
+                        repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
+plot(c(0:111),compensate-optMarathon$par[1]*seq(0,111),main="Full time period", type = "l")
+points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
+
+```
+
+# Residuals
+
+
 
 # References
 
@@ -203,5 +310,8 @@ Data source: Wikipedia (https://en.wikipedia.org/wiki/Marathon_world_record_prog
 Poisson process:
 https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
 
+Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
+58 (1): 83–90. https://doi.org/10.2307/2334319.
 
+"Hawkesbow" package...
 
