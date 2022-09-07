@@ -3,7 +3,6 @@ title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sp
 author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., West
   Point
 output:
-  beamer_presentation: default
   ioslides_presentation:
     logo: consulting_center_logo.png
 ---
@@ -59,7 +58,7 @@ MAYBE INCLUDE A COUPLE OF PICTURES OF PEOPLE
 
 ```{r}
 record_table_mod<-read_rds("record_table_mod.rds")
-head(record_table_mod)
+knitr::kable(record_table_mod)
 days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
