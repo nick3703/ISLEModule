@@ -3,6 +3,7 @@ title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sp
 author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., West
   Point
 output:
+  beamer_presentation: default
   ioslides_presentation:
     logo: consulting_center_logo.png
 ---
@@ -41,13 +42,17 @@ library(MASS)
 # Background
 
 ## Are we living in a time of records?
-- Include NY Times article screenshot of headline.
-- Brief summary of article's premise.
+
+![NYTimes.](NYTIMESarticle.png){width=50%}
+
+- Idea:  seems like an increase in records falling, but is it just the nature of randomness?
 
 ## How can we address this question?
 ## What would randomness look like?
 
-Pictures of Rod and Nick running
+# Pictures of Rod and Nick running
+
+![Rod Aloha Run San Diego, 2019 Age Group 2nd.](aloharun.jpg){width=50%}
 
 # Marathon World Record Data
 
