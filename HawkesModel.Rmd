@@ -43,8 +43,8 @@ daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first re
 daysfromstart_mod2 <- daysfromstart/365 
 days_between_mod2 = diff(daysfromstart_mod2)
 
-set.seed(13)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",111)  # end date picked number greater than longest times
+set.seed(1234)
+optMarathon<-mle(daysfromstart_mod2,"Exponential",114)  # end date picked number greater than longest times
 optMarathon$par
 summary(optMarathon)
 optMarathon$events
@@ -54,9 +54,9 @@ optMarathon$model$param
 optMarathon$model$mean()  # expected value
 optMarathon$model$dmean()  # Jacobian matrix of expected value
 optMarathon$model$ddmean()  # Hessian matrix of expected value
-optMarathon$model$loglik(daysfromstart, optMarathon$end)  #  log-likelihood
-optMarathon$model$dloglik(daysfromstart, optMarathon$end)  # Jacobian matrix of log-lik
-optMarathon$model$ddloglik(daysfromstart, optMarathon$end) # hessian matrix of log-lik
+optMarathon$model$loglik(daysfromstart_mod2, optMarathon$end)  #  log-likelihood
+optMarathon$model$dloglik(daysfromstart_mod2, optMarathon$end)  # Jacobian matrix of log-lik
+optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end) # hessian matrix of log-lik
 
 
 
