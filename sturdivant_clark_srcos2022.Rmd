@@ -6,6 +6,9 @@ output:
   beamer_presentation: default
   ioslides_presentation:
     logo: consulting_center_logo.png
+header-includes:
+- \usepackage{caption}
+- \captionsetup[figure]{labelformat=empty}
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +26,7 @@ library(readr)
 library("hawkesbow")
 library(readr)
 library(MASS)
+library(lubridate)
 ```
 
 # Outline
@@ -39,20 +43,23 @@ library(MASS)
 
 - Further Research
 
+- SCORE 
+
 # Background
 
+![Golden Age?](NYTIMESarticle.png){width=50%}
+
 ## Are we living in a time of records?
-
-![NYTimes.](NYTIMESarticle.png){width=50%}
-
 - Idea:  seems like an increase in records falling, but is it just the nature of randomness?
 
 ## How can we address this question?
 ## What would randomness look like?
 
-# Pictures of Rod and Nick running
+# 
 
-![Rod Aloha Run San Diego, 2019 Age Group 2nd.](aloharun.jpg){width=50%}
+![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=50%}
+
+![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=30%}
 
 # Marathon World Record Data
 
@@ -75,45 +82,26 @@ days_between_mod2 = diff(daysfromstart_mod2)
 
 # Visualizing the data
 
-AGAIN NEED CLEANING UP - NEED TIMES IN SOMETHING OTHER THAN SECONDS MAYBE INCLUDE 2 HOUR HORIZONTAL BAR
-MAYBE HAVE A SLIDE WHERE ADD PICTURES OF PEOPLE WHO LOWERED RECORD BY A LOT
-WHICH PLOT(S) TO USE?  MAYBE TWO OF THEM BUT ON ONE SLIDE?
+- Two and three hour times shown as horizontal lines
 
 ```{r}
-
-
-ggplot() + 
-  geom_segment(data=record_table_mod, aes(x=Date_ymd,xend=end,y=Time_sec,yend=Time_sec),size=2) + 
-  ylab("Time in Seconds")+
-  xlab("Marathon Record")+
-  geom_rug(data=record_table_mod,aes(x=Date_ymd,y=Time_sec,),sides="b")
-```
-
-# Visualize B
-```{r}
-p1<-plot(record_table_mod$Date_ymd, record_table_mod$Time_t, type = "h",
-     xlab = "Data (YMD)", ylab = "Record in Seconds")
-
+td<-seconds_to_period(c(7500,8500,9500,10500))
+timelabs <- sprintf('%02d:%02d:%02d', td@hour, minute(td), 
+                                   round(second(td)))
+p1<-plot(record_table_mod$Date_ymd, record_table_mod$Time_t, 
+         type = "h", xlab = "Data (YMD)", ylab = "Record (H:M:S)", 
+         yaxt = "n", ylim = c(7100,10800))
+axis(2, at = c(7500,8500,9500,10500), labels = timelabs, 
+     cex.axis = 0.75)
+abline(a = 7200, b = 0, lty = 2, col = "red" )
+abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
 ```
 
 
-
-# Visualize C
-
-```{r}
-
-record_table_mod %>% ggplot() +
-  geom_line(aes(x=Date_ymd, y=Time_sec, color = "Record in Seconds"),size=2) +
-  scale_color_manual(name="",
-                     values = c("Record in Seconds"="#00ba38")) +
-  theme(panel.grid.minor = element_blank())
-
-
-```
 
 # SIMPLE MODEL
 
-## POISSON PROCESS (NEED TO SHORTEN, OR PUT ON TWO SLIDES)
+## POISSON PROCESS 
 
 A model for a series of discrete events where the average time between events is known, but the exact timing of events is "random" meeting the following criteria: 
 
@@ -123,10 +111,19 @@ A model for a series of discrete events where the average time between events is
 
 -  Two events cannot occur at the same time.
 
+# Poisson Process Interarrival Times
+
 The time between events (known as the interarrival times) follow an exponential distribution defined as:
 
 $$P(T>t) = e^{-\lambda t}$$
-Where T is the random variable of the time until the next event, t is a specific time for the next event, and $\lambda$ is the rate:  the average number of events per unit of time.  Note the possible values of T are greater than 0 (positive only).  
+
+- T is the random variable of the time until the next event
+
+- t is a specific time for the next event
+
+- $\lambda$ is the rate:  the average number of events per unit of time.  
+
+Note the possible values of T are greater than 0 (positive only).  
 
 
 # Reasonableness of Exponential Interarrivals
@@ -222,8 +219,8 @@ $$g^*(t) = \beta e^{-\beta t} $$
 
 
 ```{r}
-set.seed(13)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",111)  # end date picked number greater than longest times
+set.seed(1234)
+optMarathon<-mle(daysfromstart_mod2,"Exponential",114)  # end date picked number greater than longest times
 nu = optMarathon$par[1]
 mu = optMarathon$par[2]
 b = optMarathon$par[3]
