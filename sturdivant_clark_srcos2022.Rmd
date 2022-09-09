@@ -27,6 +27,7 @@ library("hawkesbow")
 library(readr)
 library(MASS)
 library(lubridate)
+library(kableExtra)
 ```
 
 # Outline
@@ -65,12 +66,8 @@ library(lubridate)
 
 Men's Marathon world records since 1908
 
-NEED TO CLEAN UP - NICER TABLE WITH JUST TIME NAME NATIONALITY DATE
-MAYBE INCLUDE A COUPLE OF PICTURES OF PEOPLE
-
 ```{r}
 record_table_mod<-read_rds("record_table_mod.rds")
-knitr::kable(record_table_mod)
 days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
@@ -80,9 +77,25 @@ days_between_mod2 = diff(daysfromstart_mod2)
 
 ```
 
+- 50 total
+
+- First 5
+
+`r knitr::kable(record_table_mod[1:5,1:5]) %>%
+  kable_styling(font_size = 7)`
+  
+- Last 5
+
+`r knitr::kable(record_table_mod[46:50,1:5]) %>%
+  kable_styling(font_size = 7)`
+
 # Visualizing the data
 
 - Two and three hour times shown as horizontal lines
+
+- 2 hour marathon pace: 4:35 per mile
+
+- 3 hour pace:  6:52 per mile
 
 ```{r}
 td<-seconds_to_period(c(7500,8500,9500,10500))
@@ -97,6 +110,12 @@ abline(a = 7200, b = 0, lty = 2, col = "red" )
 abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
 ```
 
+# SOME MARATHON RECORD HOLDER STORIES/INFO
+
+
+MAYBE INCLUDE A COUPLE OF PICTURES OF PEOPLE
+
+ADD SOME SUMMARY STUFF - TRIVIA: COUNTRIES, LOCATIONS OF MARATHON ETC
 
 
 # SIMPLE MODEL
@@ -130,32 +149,31 @@ Note the possible values of T are greater than 0 (positive only).
 
 The exponential distribution has certain attributes, for example:
 
-$E(T) = 1/\lambda$
-$SD(T) = 1/\lambda$
+\begin{center}
+$E(T) = SD(T) = 1/\lambda$
+\end{center}
 
-The mean and standard deviation of the years between records:
+\vspace{12pt}
 
-```{r}
+For the time between record data:
 
-mean(days_between_mod2)
-sd(days_between_mod2)
+- Mean: `r round(mean(days_between_mod2),2)` years
 
-hist(days_between_mod2)
-```
+- SD: `r round(sd(days_between_mod2),2)` years
 
-#  MORE ON THE SIMPLE MODEL
+Reasonable...slightly "overdispersed"
+
+
+#  Estimating the Model
 
 We estimate (MLE) 
-$\lambda = 1/E(T)$
+$\lambda = 1/E(T)$ = `r round(fitdistr(days_between_mod2,"exponential")$estimate,3)`
+
 
 ```{r}
 expfit=fitdistr(days_between_mod2,"exponential")
 exprate<-expfit$estimate
-exprate
-```
-Model fit  
 
-```{r}
 x=density(days_between_mod2)
 hist(days_between_mod2,main="Histogram, density curve and exponential model",xlab="Interarrival Time",freq=FALSE,ylim=c(0,0.5))
 lines(x,col="red",lty = 2, lwd = 2)
@@ -163,18 +181,11 @@ curve(dexp(x, rate = exprate),col=3, lty = 3, lwd = 2, add = TRUE)
 
 ```
 
-# Fit of simple model
-
-```{r}
-ks.test(days_between_mod2,pexp,rate=exprate)
-
-cvm.test(days_between_mod2,"pexp",rate=exprate,estimated = TRUE)
-ad.test(days_between_mod2,"pexp",rate=exprate,estimated = TRUE)
 
 
-```
 
-# Fit of simple model B
+
+# Graphical Assessment of Fit
 
 
 
@@ -184,20 +195,49 @@ plot(x,pexp(x,rate=exprate),type="l",col="red", main="EDF and Exponential CDF",x
 Ecdf(days_between_mod2,xlab='Interarrival Times',subtitle=FALSE,add=TRUE)
 ```
 
+# Testing Model Fit 
+
+## Goodness of fit tests
+\vspace{12pt}
+- Kolmogorov-Smirnov:  p = `r round(ks.test(days_between_mod2,pexp,rate=exprate)$p.value,3)`
+
+- Cramer-Von Mises:  p = `r round(cvm.test(days_between_mod2,pexp,rate=exprate)$p.value,3)`
+
+- Anderson-Darling:  p = `r round(ad.test(days_between_mod2,pexp,rate=exprate)$p.value,3)`
+
+\vspace{12pt}
+All fail to reject the null hypothesis of model fit
 
 # Are records then random?
 
 ```{r}
 
-PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate))
+PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate), main = "QQ Plot of Exponential Model")
 
 ```
 
 # What are the poorly fit points?
 
-LOOK BACK AT THE ORIGINAL DATA HERE...LONGEST TIMES BETWEEN EVENTS (I THINK - NEED TO LOOK MORE CLOSELY)...ONE IS WW2 PRETTY SURE...THE OTHER NEED TO LOOK AGAIN - MAYBE AN UNUSUALLY LARGE LOWERING OF THE RECORD OR SOMETHING?
+- 11.5 year gap
+
+`r knitr::kable(record_table_mod[16:17,1:5]) %>%
+  kable_styling(font_size = 7)`
+
+
+- 10.4 year gap
+
+`r knitr::kable(record_table_mod[40:41,1:5]) %>%
+  kable_styling(font_size = 7)`
+
+
 
 # A "Self-Exciting" Model
+
+## Self-Exciting Point Processes
+
+- Events "trigger" more events
+
+- Examples of use include earthquakes, crime waves
 
 ## Hawkes Processes
 
@@ -205,6 +245,8 @@ LOOK BACK AT THE ORIGINAL DATA HERE...LONGEST TIMES BETWEEN EVENTS (I THINK - NE
 
 $$\lambda(t|H_t) = \nu + \sum_{i:t_i<t} g(t - t_i)$$
 where $\nu$ is the background rate of events and g is the "triggering function".
+
+# Exponential Triggering Function
 
 - The "triggering" function can be further decomposed:
 
@@ -291,6 +333,11 @@ plot(simRecs_Hawkes, intensity = FALSE)
 
 NEED TO WORK ON EXPLAINING - BELOW IS THE VERSION TAKING OUT BASELINE...MAYBE START WITH CONSTANT (CAN DO Poisson MODEL AND THEN THE BASELINE RATE HERE)
 
+# "Residuals"
+
+
+# Compensator Function for Fitted Hawkes Model
+
 ```{r}
 
 compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
@@ -300,8 +347,27 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 ```
 
-# Residuals
+# Residuals for Fitted Hawkes Model
 
+
+# Possibly Hession/Covariance Uncertainty in parameter estimates
+
+
+# Comparing Models - Residuals
+
+
+# Comparing Models - Overdispersion
+
+
+# Conclusions
+
+
+# Further Work...
+
+
+# SCORE
+
+Here several slides - the overall project - the module for this work (at whatever point we can get it...)
 
 
 # References
