@@ -301,59 +301,225 @@ $$g(0) = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` 0} = `r round(mu,2)
 
 # The Intensity Function over Time
 
-Below is based on a simulation of the intensity function over a 100 year period.  NOTE: HERE WOULD BE NICE TO SHOW FOR OUR DATA ALTHOUGH MIGHT NOT GIVE THE FULL PICTURE ANYWAY
+The intensity function gives the value of the rate at any time
 
-```{r}
+Below is a simulation for 100 year period based on the fitted model.
+
+- The rate is at the baseline of `r round(nu,3)` until a new event occurs
+
+- We see the jump in rate with each new event
+
+- The rate decays to baseline unless another event happens
+
+
+```{r, out.width="75%"}
 set.seed(777)
 simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
 
-plot(simRecs_Hawkes, intensity = TRUE)
-
-
+plot(simRecs_Hawkes, intensity = TRUE, xlab = "Time (Years)")
 
 ```
 
-# Intensity compared to the constant rate model
+# How Fast is the rate "decay"
+
+- Within 1 year essentially return to baseline
 
 ```{r}
 
-plot(simRecs_Hawkes, intensity = TRUE)
-abline(a = exprate, b = 0, lty = 2, col = "blue")
+t1 <- seq(0,1,0.01)
+plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)", 
+     ylab = "Increase in Intensity above Baseline")
 
 ```
 
 
 # Process as "Generations"
 
+- An event (1st generation) may spur immediate new event (2nd generation)...etc
+
+- Cannot truly identify in our data; below is simulated
+
 ```{r}
 plot(simRecs_Hawkes, intensity = FALSE)
 ```
 
+# Intensity Functions for Both Models 
+
+- The Hawkes intensity function is the model applied to the actual data
+
+- The function for the Poisson model is a constant rate of `r round(exprate,3)`
+
+```{r}
+
+base_x<-seq(0,114,.01)
+base_y<-rep(nu,length(base_x))
+ 
+base_y_exc <- mu*b*exp(-b*base_x)+base_y
+ 
+excite <- base_y
+for(j in 1:length(daysfromstart_mod2)){
+  for(i in 1:length(base_x)){
+    if(daysfromstart_mod2[j]>base_x[i]){
+      excite[i] <- excite[i]+0
+    }else{
+      excite[i] <- excite[i]+mu*b*exp(-b*(base_x[i]-daysfromstart_mod2[j]))
+    }
+  }
+}
+ 
+plot(base_x,excite,type="l",ylim=c(0,2),col="red", 
+     xlab = "Time (years since 1908", ylab = "Conditional Intensity")
+points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
+
+abline(a = exprate, b = 0, lty = 2, col = "blue")
+
+```
+
+
 # The Compensator Function
 
-NEED TO WORK ON EXPLAINING - BELOW IS THE VERSION TAKING OUT BASELINE...MAYBE START WITH CONSTANT (CAN DO Poisson MODEL AND THEN THE BASELINE RATE HERE)
+- Integrated intensity function...cumulative rate
 
-# "Residuals"
+- Simple example:  constant intensity with rate 2 per year
 
+- Compensator grows at constant rate (linear)
+
+```{r, figures-side, fig.show="hold", out.width="40%"}
+
+par(mar = c(4, 4, .1, .1))
+plot(c(0,1,2),c(2,2,2), type = "l", xlab = "Time (Years)", 
+     ylab = "Conditional Intensity")
+
+plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
+     ylab = "Compensator Function")
+
+```
+
+# Arrivals Exactly on Schedule
+
+- Two arrivals per year spaced perfectly at 6 months
+
+- Values of compensator for points 1, 2, 3, 4 are 1, 2, 3, 4
+
+- Compensator values at arrivals are "residuals"; if "on schedule" Poisson process with rate 1
+
+```{r, out.width="80%"}
+
+plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
+     ylab = "Compensator Function")
+points(c(0.5,1,1.5,2),c(1,2,3,4), cex = 2, pch = 3, col = "blue")
+
+```
+
+# "Residuals" based on Compensator
+
+- Suppose actual arrivals still constant but 3 per year (model is 2 per year)
+
+- Residuals below the y = x (Poisson rate 1) line
+
+```{r, fig.show="hold", out.width="40%"}
+
+plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
+     ylab = "Compensator Function")
+points(c(0.33,0.67,1,1.33,1.67,2),2*c(0.33,0.67,1,1.33,1.67,2),
+       cex = 2, pch = 3, col = "blue" )
+
+plot(c(1:6),c(1:6), type = "l", xlab = "Event Number", 
+     ylab = "Residuals")
+points(c(1:6),2*c(0.33,0.67,1,1.33,1.67,2),
+       cex = 2, pch = 3, col = "blue" )
+
+```
 
 # Compensator Function for Fitted Hawkes Model
+
+```{r}
+compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
+                        repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
+plot(c(0:111),compensate, type = "l", xlab = "Time (Years since 1908)",
+     ylab = "Compensator")
+points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
+```
+
+
+# "Self Exciting" Portion of Compensator Function 
+
+- We remove the baseline (cumulative) rate to better see the Hawkes process
 
 ```{r}
 
 compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
                         repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
-plot(c(0:111),compensate-optMarathon$par[1]*seq(0,111),main="Full time period", type = "l")
+plot(c(0:111),compensate-optMarathon$par[1]*seq(0,111), type = "l", 
+     xlab = "Time (Years since 1908)", ylab = "Self-excite Portion of Compensator")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 ```
 
 # Residuals for Fitted Hawkes Model
 
+-  Arrivals at times "faster" than model
+
+- Jump up event 17:  1947 record (after 12 year gap)
+
+- Jump up event 41:  1998 record (after 10 year gap)
+
+```{r}
+resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                  family = "exp", rate = optMarathon$par[3],
+                 xlab = "Event Number", ylab = "Residuals")
+plot(resid)
+abline(0, 1, col="red", lty="dashed")
+
+```
+
+
+
+# Constant Rate Model Compensator and Residuals
+
+```{r, fig.show="hold", out.width="40%"}
+
+compensate_const<-compensator(daysfromstart_mod2, t=0:111, fun = exprate, repr = 0, 
+                        family = "exp", rate = 0)
+plot(c(0:111),compensate_const, type = "l",
+     xlab = "Time (Years since 1908)", ylab = "Compensator")
+resid_const<-residuals(daysfromstart_mod2, fun = exprate, repr = 0, 
+                 family = "exp", rate = 0)
+plot(resid_const, xlab = "Event Number", ylab = "Residuals")
+abline(0, 1, col="red", lty="dashed")
+
+
+```
+
+# Comparing Model Residuals
+
+- Hawkes generally "better" before 1947
+
+- Since 1947 constant rate model seems appropriate
+
+- Perhaps we are not in an era of records for Men's marathon?
+
+```{r, out.width="80%"}
+plot(resid_const, xlab = "Event Number", ylab = "Residuals")
+abline(0, 1, col="red", lty="dashed")
+points(resid, col ="blue", pch = 4)
+legend(1, 45, legend=c("Constant Rate", "Hawkes"),
+       col=c("black", "blue"), pch=c(1,4))
+
+```
 
 # Possibly Hession/Covariance Uncertainty in parameter estimates
 
+- will look at implementing Ogata result (Cavaliere paper theorem 2) maybe?
+- below is a small start...Hessian and inverse...can get Jacobian too
 
-# Comparing Models - Residuals
+```{r}
+optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+solve(-1*hessian)
+
+
+```
 
 
 # Comparing Models - Overdispersion
@@ -361,8 +527,20 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 # Conclusions
 
+- Men's marathon records reasonably modeled using Poisson process
+
+- Some indication a "self-exciting" process could explain arrivals better
+
+- As times get faster harder to break the record?
+
+- Two "outlier" periods impact the models
+
 
 # Further Work...
+
+- Explore models for other events: women's marathon, other distances, swimming
+
+- Develop better metrics to compare and assess models
 
 
 # SCORE
