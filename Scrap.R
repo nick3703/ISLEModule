@@ -1,6 +1,59 @@
 library(readr)
 library(hawkesbow)
+library(tidyverse)
 record_table_mod<-read_rds("record_table_mod.rds")
+days_between = as.numeric(diff(record_table_mod$Date_ymd))
+daysfromstart <- cumsum(days_between)
+daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
+# units of year
+daysfromstart_mod2 <- daysfromstart/365 
+days_between_mod2 = diff(daysfromstart_mod2)
+set.seed(1234)
+optMarathon<-mle(daysfromstart_mod2,"Exponential",114)  # end date picked number greater than longest times
+optMarathon$par
+
+
+
+days_df <- data.frame(days=daysfromstart_mod2)
+
+binned_vals <- days_df %>% mutate(new_bin = cut(daysfromstart_mod2,seq(0,114,5))) %>% 
+  group_by(new_bin)%>%summarize(count=n())
+
+binned_vals <- c(0,0,0,binned_vals$count)
+binned_vals[4] <- 8
+binned_vals <- binned_vals[-length(binned_vals)]
+mean(binned_vals)
+var(binned_vals)
+
+act<-var(binned_vals)/mean(binned_vals)
+
+M <- 5000
+resp<-c()
+
+for(m in 1:M){
+  
+  simRecs <- hawkes(114, fun = optMarathon$par[1], repr = optMarathon$par[2], 
+                    family = "exp", rate = optMarathon$par[3]) 
+  
+  
+  simDat <- data.frame(simDays = simRecs$p)
+  sim_binned_vals <- simDat %>% mutate(new_bin = cut(simDays,seq(0,114,5))) %>% 
+    group_by(new_bin)%>%summarize(count=n())
+  
+  missing_bins <- 23-nrow(sim_binned_vals)
+  
+  sim_bin_vals <- c(rep(0,missing_bins),sim_binned_vals$count)
+  
+  resp[m]<-var(sim_bin_vals)/mean(sim_bin_vals)
+  
+}
+
+
+
+
+
+
+
 
 days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
@@ -64,6 +117,16 @@ simulation_df %>% ggplot(aes(x=Var_Mean))+geom_histogram()+
 
 
 
+simulation_df <- data.frame(Var_Mean = resp)
+
+simulation_df %>% ggplot(aes(x=Var_Mean))+geom_histogram()+
+  theme_bw()+geom_vline(aes(xintercept = act,color="Variance_Mean_ratio"),size=1.5)+
+  ggtitle("Simulated Variance to Mean Ratio using Hawkes Process")+
+  xlab("Empirical Distribution of Variance to Mean Ratio")+
+  scale_color_manual(name = "Value from Data", values = c(Variance_Mean_ratio = "red"))
+
+
+
 
 
 lam<-mean(binned_vals)
@@ -90,31 +153,30 @@ simulation_df_pois %>% ggplot(aes(x=Var_Mean))+geom_histogram()+
   scale_color_manual(name = "Value from Data", values = c(Variance_Mean_ratio = "red"))
 
 
-
+optMarathon$par
 
 1.26*4.2*exp(-4.2*1)
 
 
-base_x<-seq(0,100,.01)
-base_y<-rep(.43,length(base_x))
+base_x<-seq(0,114,.01)
+base_y<-rep(optMarathon$par[1],length(base_x))
 
 
-base_y_exc <- .126*4.2*exp(-4.2*base_x)+base_y
 
 
 excite <- base_y
-for(j in 1:length(daysfromstart_mod)){
+for(j in 1:length(daysfromstart_mod2)){
   for(i in 1:length(base_x)){
-    if(daysfromstart_mod[j]>base_x[i]){
+    if(daysfromstart_mod2[j]>base_x[i]){
       excite[i] <- excite[i]+0
     }else{
-      excite[i] <- excite[i]+.126*4.2*exp(-4.2*(base_x[i]-daysfromstart_mod[j]))
+      excite[i] <- excite[i]+optMarathon$par[2]*optMarathon$par[3]*exp(-optMarathon$par[3]*(base_x[i]-daysfromstart_mod2[j]))
     }
   }
 }
 
-plot(base_x,excite,type="l",ylim=c(0,2),col="red")
-points(daysfromstart_mod,rep(0,length(daysfromstart_mod)), pch=3)
+plot(base_x,excite,type="l",ylim=c(0,2),col="red",xlab="Years Since First World Record",ylab="Excitement Function",main="Self-Excitement of Marathon Records")
+points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 
 
