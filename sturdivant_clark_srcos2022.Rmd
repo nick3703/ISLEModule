@@ -4,8 +4,6 @@ author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., We
   Point
 output:
   beamer_presentation: default
-  ioslides_presentation:
-    logo: consulting_center_logo.png
 header-includes:
 - \usepackage{caption}
 - \captionsetup[figure]{labelformat=empty}
@@ -58,9 +56,16 @@ library(kableExtra)
 
 # 
 
-![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=50%}
+::: columns
 
-![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=30%}
+:::: column
+
+![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=90%}
+::::
+:::: column
+![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=60%}
+::::
+::: 
 
 # Marathon World Record Data
 
@@ -262,7 +267,7 @@ $$g^*(t) = \beta e^{-\beta t} $$
 
 ```{r}
 set.seed(1234)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",114)  # end date picked number greater than longest times
+optMarathon<-mle(daysfromstart_mod2,"Exponential",110.23)  # end date picked number greater than longest times
 nu = optMarathon$par[1]
 mu = optMarathon$par[2]
 b = optMarathon$par[3]
@@ -343,6 +348,19 @@ plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)",
 plot(simRecs_Hawkes, intensity = FALSE)
 ```
 
+# Possibly Hession/Covariance Uncertainty in parameter estimates
+
+- will look at implementing Ogata result (Cavaliere paper theorem 2) maybe?
+- below is a small start...Hessian and inverse...can get Jacobian too
+
+```{r}
+optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+solve(-1*hessian)
+
+
+```
+
 # Intensity Functions for Both Models 
 
 - The Hawkes intensity function is the model applied to the actual data
@@ -368,7 +386,7 @@ for(j in 1:length(daysfromstart_mod2)){
 }
  
 plot(base_x,excite,type="l",ylim=c(0,2),col="red", 
-     xlab = "Time (years since 1908", ylab = "Conditional Intensity")
+     xlab = "Time (years since 1908)", ylab = "Conditional Intensity")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 abline(a = exprate, b = 0, lty = 2, col = "blue")
@@ -493,11 +511,11 @@ abline(0, 1, col="red", lty="dashed")
 
 # Comparing Model Residuals
 
-- Hawkes generally "better" before 1947
+- Hawkes generally "better" 
 
-- Since 1947 constant rate model seems appropriate
+- Two large gaps clear impact on both models
 
-- Perhaps we are not in an era of records for Men's marathon?
+- Hard to tell degree of improvement
 
 ```{r, out.width="80%"}
 plot(resid_const, xlab = "Event Number", ylab = "Residuals")
@@ -508,21 +526,26 @@ legend(1, 45, legend=c("Constant Rate", "Hawkes"),
 
 ```
 
-# Possibly Hession/Covariance Uncertainty in parameter estimates
 
-- will look at implementing Ogata result (Cavaliere paper theorem 2) maybe?
-- below is a small start...Hessian and inverse...can get Jacobian too
-
-```{r}
-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
-hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
-solve(-1*hessian)
-
-
-```
 
 
 # Comparing Models - Overdispersion
+
+::: columns
+
+:::: column
+
+![](VarianceMeanPoisson.jpg){width=100%}
+
+::::
+
+:::: column
+
+![](VarianceMeanHawkes.jpg){width=100%}
+
+::::
+
+:::
 
 
 # Conclusions
@@ -557,6 +580,9 @@ https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-expl
 
 Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
 58 (1): 83–90. https://doi.org/10.2307/2334319.
+
+Ogata, Y. (1981). On Lewis' simulation method for point processes.IEEE Trans-
+actions on Information Theory, 27(1), 23-31.
 
 "Hawkesbow" package...
 
