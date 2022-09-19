@@ -1,0 +1,87 @@
+---
+title: Random Records
+author: Nicholas Clark, Rodney Sturdivant
+description:
+keywords:
+date: 09/19/2022
+require:
+    marathon: "https://isle.stat.cmu.edu/SCORE_Marathon.json"
+    marathondays: "https://isle.stat.cmu.edu/SCORE_marathondays.json"
+language: en-US
+state:
+license: CC BY 4.0 [https://creativecommons.org/licenses/by/4.0]
+---
+
+# Random Records
+
+## Are We Living in an Age of Records?
+
+<Image 
+    alt="Self-portrait by Vincent van Gogh from September 1889." 
+    src="https://isle.stat.cmu.edu/SCORE_NYTimesArticle.PNG"
+    width="600px"
+    height="auto"
+/>
+
+Often it may seem that we see a lot of World Records happen all at the same time. But are we suffering from a <a href="https://en.wikipedia.org/wiki/Recency_bias#:~:text=Recency%20bias%20is%20a%20cognitive,before%20being%20dismissed%20to%20deliberate.">recency bias </a>? How would we even know?
+
+
+DATA!
+
+
+In this module we will explore the question, "Are Men's Marathon World Records Random Events?"
+
+
+
+Below we can see the list of Men's Marathon World Records from Wikipedia.
+
+<DataTable
+    data={marathon}
+/>
+
+
+<FreeTextQuestion id="q1" question="What Data can be used to help answer the question - Are World Records Random Events?" solution="The number of days between World Records" />
+
+So, we see that the data, maybe, doesn't directly answer our question. We could work with the data to get it into a better format. What do you think would be an appropriate step to take?
+
+<MultipleChoiceQuestion
+    solution={1}
+    answers={[
+        {content:"Compute the amount of time each record decreased by"},
+        {content:"Compute the number of days between record"},
+        {content:"Find the number of times each individual set a World Record"}
+    ]}
+    question="Which of the following methods are used for clustering?"
+    provideFeedback="full"
+/>
+
+<DataExplorer
+    data={marathondays}
+    quantitative={['Days_Between_Record']}
+    statistics={["Mean", "Median", "Variance", "Standard Deviation"]}
+    plots={["Histogram",]}
+/>
+
+
+Using the ISLE toolkit, explore the data. 
+
+<FreeTextQuestion id="q2" question="Would it be appropriate to use a Normal Distribution to model this data?" solution="No, in the histogram the data appear to be highly skewed"/>
+
+## The Exponential Distribution
+
+
+There are several steps one might use to determine if a model, such as exponential interarrivals, is appropriate.  The exponential distribution has certain attributes, for example, if we say that $T\sim Exp(\lambda)$:
+
+
+The expected value of $T$ is:
+
+$E(T) = 1/\lambda$
+
+
+And the Standard Deviation of $T$ is:
+$SD(T) = 1/\lambda$
+
+In other words, the mean of the distibution is the same as its standard deviation and both are equal to the one over the rate parameter, $\lambda$
+
+
+<FreeTextQuestion id="q3" question="Using the Data Toolbox, determine if this assumption is appropriate for our data" solution="The sample mean is 821 and the sample standard deviation is 886, this is likely close enough to satisfy the distributional assumptions for an exponential distribution "/>
