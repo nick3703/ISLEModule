@@ -354,11 +354,18 @@ plot(simRecs_Hawkes, intensity = FALSE)
 
 # Inference for parameter estimates
 
-- Ogata (1971) asymptotic result
+- Ogata (1971) asymptotic result for the parameters ($\theta$):
 
 $$M^{1/2}(\hat{\theta}_M - \theta_o) \xrightarrow{d} N(0, I(\theta_o)^{-1})$$
+where $M$ is the total time for the process and:
+
 
 $$-M^{-1}H_M(\theta_o) \xrightarrow{p} I(\theta_o)$$
+
+We can estimate the Hessian, $H_M$, and use the result to produce confidence intervals for the parameters.
+
+- Asymptotic result may not hold (Cavaliere et al, 2021)
+
 # Estimated Ogata confidence intervals
 
 - 95% confidence intervals based on Ogata for the three model parameters
@@ -603,6 +610,8 @@ Data source: Wikipedia (https://en.wikipedia.org/wiki/Marathon_world_record_prog
 
 Poisson process:
 https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
+
+Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap inference for Hawkes and general point processes.  Discussion Paper Series, U. Copenhagen Economics. Available at SSRN: https://ssrn.com/abstract=3844552 or http://dx.doi.org/10.2139/ssrn.3844552
 
 Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
 58 (1): 83–90. https://doi.org/10.2307/2334319.
