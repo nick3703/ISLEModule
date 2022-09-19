@@ -46,7 +46,10 @@ library(kableExtra)
 
 # Background
 
+<center>
 ![Golden Age?](NYTIMESarticle.png){width=50%}
+
+</center>
 
 ## Are we living in a time of records?
 - Idea:  seems like an increase in records falling, but is it just the nature of randomness?
@@ -97,12 +100,7 @@ days_between_mod2 = diff(daysfromstart_mod2)
 # Visualizing the data
 
 - Two and three hour times shown as horizontal lines
-
-- 2 hour marathon pace: 4:35 per mile
-
-- 3 hour pace:  6:52 per mile
-
-```{r}
+```{r, fig.align='center', out.width="75%"}
 td<-seconds_to_period(c(7500,8500,9500,10500))
 timelabs <- sprintf('%02d:%02d:%02d', td@hour, minute(td), 
                                    round(second(td)))
@@ -114,6 +112,12 @@ axis(2, at = c(7500,8500,9500,10500), labels = timelabs,
 abline(a = 7200, b = 0, lty = 2, col = "red" )
 abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
 ```
+- 2 hour marathon pace: 4:35 per mile
+
+- 3 hour pace:  6:52 per mile
+
+
+
 
 # SOME MARATHON RECORD HOLDER STORIES/INFO
 
@@ -348,18 +352,40 @@ plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)",
 plot(simRecs_Hawkes, intensity = FALSE)
 ```
 
-# Possibly Hession/Covariance Uncertainty in parameter estimates
+# Inference for parameter estimates
 
-- will look at implementing Ogata result (Cavaliere paper theorem 2) maybe?
-- below is a small start...Hessian and inverse...can get Jacobian too
+- Ogata (1971) asymptotic result
+
+$$M^{1/2}(\hat{\theta}_M - \theta_o) \xrightarrow{d} N(0, I(\theta_o)^{-1})$$
+
+$$-M^{-1}H_M(\theta_o) \xrightarrow{p} I(\theta_o)$$
+# Estimated Ogata confidence intervals
+
+- 95% confidence intervals based on Ogata for the three model parameters
 
 ```{r}
-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+#optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
 hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
-solve(-1*hessian)
-
-
+infomat<- -1*hessian/optMarathon$end
+varcov<-solve(infomat)
+#varcov
+se1<-sqrt(varcov[1,1])/sqrt(optMarathon$end)
+se2<-sqrt(varcov[2,2])/sqrt(optMarathon$end)
+se3<-sqrt(varcov[3,3])/sqrt(optMarathon$end)
+nu.ll<-round(nu,3)-qnorm(0.975)*se1
+nu.ul<-round(nu,3)+qnorm(0.975)*se1
+mu.ll<-round(mu,3)-qnorm(0.975)*se2
+mu.ll<-round(mu,3)+qnorm(0.975)*se2
+b.ll<-round(b,3)-qnorm(0.975)*se3
+b.ll<-round(b,3)+qnorm(0.975)*se3
 ```
+
+- baseline intensity  `r round(nu,3)`
+
+  `r round(nu,3)`
+- reproduction mean  `r round(mu,3)`
+- exponential reproduction function rate `r round(b,3)`
+
 
 # Intensity Functions for Both Models 
 
