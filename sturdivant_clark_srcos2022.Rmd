@@ -4,8 +4,6 @@ author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., We
   Point
 output:
   beamer_presentation: default
-  ioslides_presentation:
-    logo: consulting_center_logo.png
 header-includes:
 - \usepackage{caption}
 - \captionsetup[figure]{labelformat=empty}
@@ -48,7 +46,10 @@ library(kableExtra)
 
 # Background
 
+<center>
 ![Golden Age?](NYTIMESarticle.png){width=50%}
+
+</center>
 
 ## Are we living in a time of records?
 - Idea:  seems like an increase in records falling, but is it just the nature of randomness?
@@ -58,9 +59,16 @@ library(kableExtra)
 
 # 
 
-![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=50%}
+::: columns
 
-![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=30%}
+:::: column
+
+![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=90%}
+::::
+:::: column
+![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=60%}
+::::
+::: 
 
 # Marathon World Record Data
 
@@ -92,12 +100,7 @@ days_between_mod2 = diff(daysfromstart_mod2)
 # Visualizing the data
 
 - Two and three hour times shown as horizontal lines
-
-- 2 hour marathon pace: 4:35 per mile
-
-- 3 hour pace:  6:52 per mile
-
-```{r}
+```{r, fig.align='center', out.width="75%"}
 td<-seconds_to_period(c(7500,8500,9500,10500))
 timelabs <- sprintf('%02d:%02d:%02d', td@hour, minute(td), 
                                    round(second(td)))
@@ -109,6 +112,12 @@ axis(2, at = c(7500,8500,9500,10500), labels = timelabs,
 abline(a = 7200, b = 0, lty = 2, col = "red" )
 abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
 ```
+- 2 hour marathon pace: 4:35 per mile
+
+- 3 hour pace:  6:52 per mile
+
+
+
 
 # SOME MARATHON RECORD HOLDER STORIES/INFO
 
@@ -262,7 +271,7 @@ $$g^*(t) = \beta e^{-\beta t} $$
 
 ```{r}
 set.seed(1234)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",114)  # end date picked number greater than longest times
+optMarathon<-mle(daysfromstart_mod2,"Exponential",110.23)  # end date picked number greater than longest times
 nu = optMarathon$par[1]
 mu = optMarathon$par[2]
 b = optMarathon$par[3]
@@ -343,6 +352,48 @@ plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)",
 plot(simRecs_Hawkes, intensity = FALSE)
 ```
 
+# Inference for parameter estimates
+
+- Ogata (1971) asymptotic result for the parameters ($\theta$):
+
+$$M^{1/2}(\hat{\theta}_M - \theta_o) \xrightarrow{d} N(0, I(\theta_o)^{-1})$$
+where $M$ is the total time for the process and:
+
+
+$$-M^{-1}H_M(\theta_o) \xrightarrow{p} I(\theta_o)$$
+
+We can estimate the Hessian, $H_M$, and use the result to produce confidence intervals for the parameters.
+
+- Asymptotic result may not hold (Cavaliere et al, 2021)
+
+# Estimated Ogata confidence intervals
+
+- 95% confidence intervals based on Ogata for the three model parameters
+
+```{r}
+#optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
+infomat<- -1*hessian/optMarathon$end
+varcov<-solve(infomat)
+#varcov
+se1<-sqrt(varcov[1,1])/sqrt(optMarathon$end)
+se2<-sqrt(varcov[2,2])/sqrt(optMarathon$end)
+se3<-sqrt(varcov[3,3])/sqrt(optMarathon$end)
+nu.ll<-round(nu,3)-qnorm(0.975)*se1
+nu.ul<-round(nu,3)+qnorm(0.975)*se1
+mu.ll<-round(mu,3)-qnorm(0.975)*se2
+mu.ll<-round(mu,3)+qnorm(0.975)*se2
+b.ll<-round(b,3)-qnorm(0.975)*se3
+b.ll<-round(b,3)+qnorm(0.975)*se3
+```
+
+- baseline intensity  `r round(nu,3)`
+
+  `r round(nu,3)`
+- reproduction mean  `r round(mu,3)`
+- exponential reproduction function rate `r round(b,3)`
+
+
 # Intensity Functions for Both Models 
 
 - The Hawkes intensity function is the model applied to the actual data
@@ -368,7 +419,7 @@ for(j in 1:length(daysfromstart_mod2)){
 }
  
 plot(base_x,excite,type="l",ylim=c(0,2),col="red", 
-     xlab = "Time (years since 1908", ylab = "Conditional Intensity")
+     xlab = "Time (years since 1908)", ylab = "Conditional Intensity")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 abline(a = exprate, b = 0, lty = 2, col = "blue")
@@ -493,11 +544,11 @@ abline(0, 1, col="red", lty="dashed")
 
 # Comparing Model Residuals
 
-- Hawkes generally "better" before 1947
+- Hawkes generally "better" 
 
-- Since 1947 constant rate model seems appropriate
+- Two large gaps clear impact on both models
 
-- Perhaps we are not in an era of records for Men's marathon?
+- Hard to tell degree of improvement
 
 ```{r, out.width="80%"}
 plot(resid_const, xlab = "Event Number", ylab = "Residuals")
@@ -508,21 +559,26 @@ legend(1, 45, legend=c("Constant Rate", "Hawkes"),
 
 ```
 
-# Possibly Hession/Covariance Uncertainty in parameter estimates
 
-- will look at implementing Ogata result (Cavaliere paper theorem 2) maybe?
-- below is a small start...Hessian and inverse...can get Jacobian too
-
-```{r}
-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
-hessian<-optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
-solve(-1*hessian)
-
-
-```
 
 
 # Comparing Models - Overdispersion
+
+::: columns
+
+:::: column
+
+![](VarianceMeanPoisson.jpg){width=100%}
+
+::::
+
+:::: column
+
+![](VarianceMeanHawkes.jpg){width=100%}
+
+::::
+
+:::
 
 
 # Conclusions
@@ -555,8 +611,13 @@ Data source: Wikipedia (https://en.wikipedia.org/wiki/Marathon_world_record_prog
 Poisson process:
 https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
 
+Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap inference for Hawkes and general point processes.  Discussion Paper Series, U. Copenhagen Economics. Available at SSRN: https://ssrn.com/abstract=3844552 or http://dx.doi.org/10.2139/ssrn.3844552
+
 Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
 58 (1): 83–90. https://doi.org/10.2307/2334319.
+
+Ogata, Y. (1981). On Lewis' simulation method for point processes.IEEE Trans-
+actions on Information Theory, 27(1), 23-31.
 
 "Hawkesbow" package...
 
