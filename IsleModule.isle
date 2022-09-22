@@ -1,6 +1,6 @@
 ---
 title: Random Records
-author: Nicholas Clark, Rodney Sturdivant
+author: Nicholas Clark, Rodney Sturdivant, Kate Sanborn
 description:
 keywords:
 date: 09/19/2022
@@ -85,3 +85,14 @@ In other words, the mean of the distibution is the same as its standard deviatio
 
 
 <FreeTextQuestion id="q3" question="Using the Data Toolbox, determine if this assumption is appropriate for our data" solution="The sample mean is 821 and the sample standard deviation is 886, this is likely close enough to satisfy the distributional assumptions for an exponential distribution "/>
+
+In the R package "MASS" is a function "fitdistr" which we can use to determine the "best" exponential distribution for a given set of data.  The command is below and the estimate of the rate $\lambda$ extracted.  
+
+<RShell code="library(MASS)" lines={2} disabled />
+
+<RShell code={`days_between_df <- read.csv(file="https://isle.stat.cmu.edu/SCORE_marathon.csv");
+expfit=fitdistr(days_between_df$Days_Between_Record,"exponential");
+exprate<-expfit$estimate;
+exprate;
+`} resettable 
+addPreceding lines={2}/>
