@@ -179,7 +179,7 @@ We estimate (MLE)
 $\lambda = 1/E(T)$ = `r round(fitdistr(days_between_mod2,"exponential")$estimate,3)`
 
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 expfit=fitdistr(days_between_mod2,"exponential")
 exprate<-expfit$estimate
 
@@ -198,7 +198,7 @@ curve(dexp(x, rate = exprate),col=3, lty = 3, lwd = 2, add = TRUE)
 
 
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 x=seq(0,max(days_between_mod2),0.1)
 plot(x,pexp(x,rate=exprate),type="l",col="red", main="EDF and Exponential CDF",xlab="Interarrival Time",ylab="Proportion <= x")
 Ecdf(days_between_mod2,xlab='Interarrival Times',subtitle=FALSE,add=TRUE)
@@ -219,7 +219,7 @@ All fail to reject the null hypothesis of model fit
 
 # Are records then random?
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 
 PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate), main = "QQ Plot of Exponential Model")
 
@@ -321,7 +321,7 @@ Below is a simulation for 100 year period based on the fitted model.
 - The rate decays to baseline unless another event happens
 
 
-```{r, out.width="75%"}
+```{r, fig.align='center', out.width="75%"}
 set.seed(777)
 simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
 
@@ -333,7 +333,7 @@ plot(simRecs_Hawkes, intensity = TRUE, xlab = "Time (Years)")
 
 - Within 1 year essentially return to baseline
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 
 t1 <- seq(0,1,0.01)
 plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)", 
@@ -348,13 +348,23 @@ plot(t1, mu*b*exp(-b*t1), xlab = "Time Since Event (Years)",
 
 - Cannot truly identify in our data; below is simulated
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 plot(simRecs_Hawkes, intensity = FALSE)
+```
+
+# Would a Poisson Process model detect "excited" process?
+
+```{r}
+
+
+expfitHawkesSim <- fitdistr(simRecs_Hawkes$p,"exponential")
+exprateHawkesSim <-expfitHawkesSim$estimate
+
 ```
 
 # Inference for parameter estimates
 
-- Ogata (1971) asymptotic result for the parameters ($\theta$):
+- Ogata (1978) asymptotic result for the parameters ($\theta$):
 
 $$M^{1/2}(\hat{\theta}_M - \theta_o) \xrightarrow{d} N(0, I(\theta_o)^{-1})$$
 where $M$ is the total time for the process and:
@@ -382,17 +392,19 @@ se3<-sqrt(varcov[3,3])/sqrt(optMarathon$end)
 nu.ll<-round(nu,3)-qnorm(0.975)*se1
 nu.ul<-round(nu,3)+qnorm(0.975)*se1
 mu.ll<-round(mu,3)-qnorm(0.975)*se2
-mu.ll<-round(mu,3)+qnorm(0.975)*se2
+mu.ul<-round(mu,3)+qnorm(0.975)*se2
 b.ll<-round(b,3)-qnorm(0.975)*se3
-b.ll<-round(b,3)+qnorm(0.975)*se3
+b.ul<-round(b,3)+qnorm(0.975)*se3
 ```
 
-- baseline intensity  `r round(nu,3)`
-
-  `r round(nu,3)`
-- reproduction mean  `r round(mu,3)`
-- exponential reproduction function rate `r round(b,3)`
-
+- baseline intensity estimate  `r round(nu,3)`
+   95% CI:  `r round(nu.ll,3)`, `r round(nu.ul,3)`
+   
+- reproduction mean estimate `r round(mu,3)`
+  95% CI:  `r round(mu.ll,3)`, `r round(mu.ul,3)`
+  
+- exponential reproduction function rate estimate `r round(b,3)`
+  95% CI:  `r round(b.ll,3)`, `r round(b.ul,3)`
 
 # Intensity Functions for Both Models 
 
@@ -400,7 +412,7 @@ b.ll<-round(b,3)+qnorm(0.975)*se3
 
 - The function for the Poisson model is a constant rate of `r round(exprate,3)`
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 
 base_x<-seq(0,114,.01)
 base_y<-rep(nu,length(base_x))
@@ -454,7 +466,7 @@ plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)",
 
 - Compensator values at arrivals are "residuals"; if "on schedule" Poisson process with rate 1
 
-```{r, out.width="80%"}
+```{r, fig.align='center', out.width="80%"}
 
 plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
      ylab = "Compensator Function")
@@ -484,7 +496,7 @@ points(c(1:6),2*c(0.33,0.67,1,1.33,1.67,2),
 
 # Compensator Function for Fitted Hawkes Model
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
                         repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
 plot(c(0:111),compensate, type = "l", xlab = "Time (Years since 1908)",
@@ -497,7 +509,7 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 - We remove the baseline (cumulative) rate to better see the Hawkes process
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 
 compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
                         repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
@@ -515,7 +527,7 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 - Jump up event 41:  1998 record (after 10 year gap)
 
-```{r}
+```{r, fig.align='center', out.width="75%"}
 resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], repr = optMarathon$par[2], 
                   family = "exp", rate = optMarathon$par[3],
                  xlab = "Event Number", ylab = "Residuals")
@@ -550,7 +562,7 @@ abline(0, 1, col="red", lty="dashed")
 
 - Hard to tell degree of improvement
 
-```{r, out.width="80%"}
+```{r, fig.align='center', out.width="80%"}
 plot(resid_const, xlab = "Event Number", ylab = "Residuals")
 abline(0, 1, col="red", lty="dashed")
 points(resid, col ="blue", pch = 4)
@@ -616,8 +628,9 @@ Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap infe
 Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
 58 (1): 83–90. https://doi.org/10.2307/2334319.
 
-Ogata, Y. (1981). On Lewis' simulation method for point processes.IEEE Trans-
-actions on Information Theory, 27(1), 23-31.
+Ogata, Y. (1978). The asymptotic behavior of maximum likelihood estimators
+for stationary point processes. Annals of the Institute of Statistical Mathe-
+matics, 30(2), 243{261.
 
 "Hawkesbow" package...
 
