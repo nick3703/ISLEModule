@@ -1,5 +1,5 @@
 ---
-title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sports."
+title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sports." 
 author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., West
   Point
 output:
@@ -7,6 +7,7 @@ output:
 header-includes:
 - \usepackage{caption}
 - \captionsetup[figure]{labelformat=empty}
+- \titlegraphic{\includegraphics[width = 3cm]{consulting_center_logo.png}}
 ---
 
 ```{r setup, include=FALSE}
@@ -30,8 +31,6 @@ library(kableExtra)
 
 # Outline
 
-- Baseball Rare Events (if needed only)
-
 - Background
 
 - Marathon Data
@@ -39,6 +38,8 @@ library(kableExtra)
 - Simple Model
 
 - Self-Exciting Model
+
+- Model Comparisons (preliminary results)
 
 - Further Research
 
@@ -66,7 +67,7 @@ library(kableExtra)
 ![Rod Aloha 10K Run (San Diego, 2018), 2nd Age Group](aloharun.jpg){width=90%}
 ::::
 :::: column
-![Rod Last Marathon (LA, 2018), 1st, Glendora CA Runners](RodLAmarathon.png){height=60%}
+![Rod Last Marathon (LA, 2018), 1st, all city of Glendora CA runners](RodLAmarathon.png){height=60%}
 ::::
 ::: 
 
@@ -97,6 +98,57 @@ days_between_mod2 = diff(daysfromstart_mod2)
 `r knitr::kable(record_table_mod[46:50,1:5]) %>%
   kable_styling(font_size = 7)`
 
+# Fun Facts
+
+::: columns
+
+:::: column
+
+- Countries with most records
+  - U.K.  12
+  - U.S.   7
+  - Japan/Kenya/Ethiopia  5
+  
+- Largest decrease:  
+  - James Clark, US, 1909
+  - 2:46:52.8 
+  - Nearly 6 minutes faster than previous
+
+:::: 
+
+:::: column
+
+![Khalid Khannouchi, last US record holder (2:05:38, 2002)](Khalid_Khannouchi.jpeg){height=50%}
+::::
+
+::: 
+
+
+# Fun Facts
+
+::: columns
+
+:::: column
+
+![Polytechnic Marathon Program 1993 (Jim Peters)](polyprog.png){height=50%}
+
+::::
+
+
+:::: column
+- Most records
+  - Jim Peters, UK, 
+  - Set records 4 times from 1952-1954
+
+- Locations with most records
+  - Polytechnic Marathon (London) - 8
+  - Berlin Marathon - 8 
+    - Last 7 records
+  - Tokyo Marathon - 5
+  
+::::
+
+:::
 # Visualizing the data
 
 - Two and three hour times shown as horizontal lines
@@ -106,11 +158,11 @@ timelabs <- sprintf('%02d:%02d:%02d', td@hour, minute(td),
                                    round(second(td)))
 p1<-plot(record_table_mod$Date_ymd, record_table_mod$Time_t, 
          type = "h", xlab = "Data (YMD)", ylab = "Record (H:M:S)", 
-         yaxt = "n", ylim = c(7100,10800))
+         yaxt = "n", ylim = c(7100,10800), lwd = 2)
 axis(2, at = c(7500,8500,9500,10500), labels = timelabs, 
      cex.axis = 0.75)
-abline(a = 7200, b = 0, lty = 2, col = "red" )
-abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
+abline(a = 7200, b = 0, lty = 2, col = "red", lwd = 3)
+abline(a = 3*60*60, b = 0, lty = 2, col = "red", lwd = 3 )
 ```
 - 2 hour marathon pace: 4:35 per mile
 
@@ -118,13 +170,6 @@ abline(a = 3*60*60, b = 0, lty = 2, col = "red" )
 
 
 
-
-# SOME MARATHON RECORD HOLDER STORIES/INFO
-
-
-MAYBE INCLUDE A COUPLE OF PICTURES OF PEOPLE
-
-ADD SOME SUMMARY STUFF - TRIVIA: COUNTRIES, LOCATIONS OF MARATHON ETC
 
 
 # SIMPLE MODEL
@@ -185,8 +230,8 @@ exprate<-expfit$estimate
 
 x=density(days_between_mod2)
 hist(days_between_mod2,main="Histogram, density curve and exponential model",xlab="Interarrival Time",freq=FALSE,ylim=c(0,0.5))
-lines(x,col="red",lty = 2, lwd = 2)
-curve(dexp(x, rate = exprate),col=3, lty = 3, lwd = 2, add = TRUE)
+lines(x,col="red",lty = 2, lwd = 3)
+curve(dexp(x, rate = exprate),col="blue", lty = 1, lwd = 3, add = TRUE)
 
 ```
 
@@ -196,12 +241,12 @@ curve(dexp(x, rate = exprate),col=3, lty = 3, lwd = 2, add = TRUE)
 
 # Graphical Assessment of Fit
 
-
+Empirical Distribution Function (EDF) and Cumulative Distribution Function (CDF)
 
 ```{r, fig.align='center', out.width="75%"}
 x=seq(0,max(days_between_mod2),0.1)
-plot(x,pexp(x,rate=exprate),type="l",col="red", main="EDF and Exponential CDF",xlab="Interarrival Time",ylab="Proportion <= x")
-Ecdf(days_between_mod2,xlab='Interarrival Times',subtitle=FALSE,add=TRUE)
+plot(x,pexp(x,rate=exprate),type="l",col="red",lwd=3,lty=2, main="EDF and Exponential CDF",xlab="Interarrival Time",ylab="Proportion <= x")
+Ecdf(days_between_mod2,xlab='Interarrival Times',subtitle=FALSE,add=TRUE,lwd=2)
 ```
 
 # Testing Model Fit 
@@ -221,7 +266,8 @@ All fail to reject the null hypothesis of model fit
 
 ```{r, fig.align='center', out.width="75%"}
 
-PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate), main = "QQ Plot of Exponential Model")
+PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate), col="red", pch = 16, cex = 1.5,
+       main = "QQ Plot of Exponential Model")
 
 ```
 
@@ -238,7 +284,15 @@ PlotQQ(days_between_mod2, function(p) qexp(p, rate=exprate), main = "QQ Plot of 
 `r knitr::kable(record_table_mod[40:41,1:5]) %>%
   kable_styling(font_size = 7)`
 
+# Have we answered the question?
 
+- Model fit seems to suggest random events (no "golden age" of records)
+
+- Assumptions such as independence very hard to assess
+
+  - Could model miss periods of increased records and still look reasonable?
+  
+  - There may be factors that increase the probability of records...
 
 # A "Self-Exciting" Model
 
@@ -300,25 +354,25 @@ rate0=mu*b
 
 At the instant of the first event (world record), $t = t_1$ so $g(t - t_1 = 0)$ and the reproduction rate is:
 
-$$g(0) = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` 0} = `r round(mu,2)` * `r round(b,2)` =  `r round(rate0,3)` $$
+$$g(0) = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` * 0} = `r round(mu,2)` * `r round(b,2)` =  `r round(rate0,3)` $$
 
 - The rate increases from the baseline rate of `r round(nu,3)` by this amount at the moment of this occurrence
 
-- The rate then decays back to baseline over time (unless a new event occurs).
+- The rate then decays back to baseline over time (unless a new event occurs)
 
 - Each new event "excites" the rate to increase and then decay
 
 # The Intensity Function over Time
 
-The intensity function gives the value of the rate at any time
+- The intensity function gives the value of the rate at any time
 
-Below is a simulation for 100 year period based on the fitted model.
+- Here we simulate 100 years based on the fitted model.
 
-- The rate is at the baseline of `r round(nu,3)` until a new event occurs
+  - The rate is at the baseline of `r round(nu,3)` until a new event occurs
 
-- We see the jump in rate with each new event
+  - We see the jump in rate with each new event
 
-- The rate decays to baseline unless another event happens
+  - The rate decays to baseline unless another event happens
 
 
 ```{r, fig.align='center', out.width="75%"}
@@ -354,13 +408,29 @@ plot(simRecs_Hawkes, intensity = FALSE)
 
 # Would a Poisson Process model detect "excited" process?
 
-```{r}
+- Simulated Hawkes process using estimates from our data
+  - 1000 runs of 100 years each 
+- Fit exponential (constant) rate interrarival model
+  - Tested fit using K-S Test
+
+```{r, fig.align='center', out.width="60%"}
 
 
-expfitHawkesSim <- fitdistr(simRecs_Hawkes$p,"exponential")
-exprateHawkesSim <-expfitHawkesSim$estimate
+holdp <- rep(0,1000)
+for(i in 1:1000){
+  simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
+  days_between_sim = as.numeric(diff(simRecs_Hawkes$p))
+  expfitHawkesSim <- fitdistr(days_between_sim,"exponential")
+  exprateHawkesSim <-expfitHawkesSim$estimate
+  holdp[i]<-ks.test(days_between_sim,pexp,rate=exprateHawkesSim)$p
+}
+hist(holdp, main = "K-S Test p-values, 1000 simulations", xlab = "p-value" )
+abline(v=0.05, col="red",lty=2,lwd =3)
+
 
 ```
+
+- Rejected fit in only `r 100*sum(holdp < 0.05)/1000` percent of simulations.
 
 # Inference for parameter estimates
 
@@ -372,13 +442,13 @@ where $M$ is the total time for the process and:
 
 $$-M^{-1}H_M(\theta_o) \xrightarrow{p} I(\theta_o)$$
 
-We can estimate the Hessian, $H_M$, and use the result to produce confidence intervals for the parameters.
-
-- Asymptotic result may not hold (Cavaliere et al, 2021)
+- We can estimate the Hessian, $H_M$, from ML estimation
+  - Use the result to produce confidence intervals for the parameters.
+  - Asymptotic result may not hold (Cavaliere et al, 2021)
 
 # Estimated Ogata confidence intervals
 
-- 95% confidence intervals based on Ogata for the three model parameters
+95% confidence intervals based on Ogata for the three model parameters
 
 ```{r}
 #optMarathon$model$ddloglik(daysfromstart_mod2, optMarathon$end)
@@ -397,14 +467,14 @@ b.ll<-round(b,3)-qnorm(0.975)*se3
 b.ul<-round(b,3)+qnorm(0.975)*se3
 ```
 
-- baseline intensity estimate  `r round(nu,3)`
-   95% CI:  `r round(nu.ll,3)`, `r round(nu.ul,3)`
+- Baseline intensity estimate:  `r round(nu,3)`
+  - 95% CI:  `r round(nu.ll,3)`, `r round(nu.ul,3)`
    
-- reproduction mean estimate `r round(mu,3)`
-  95% CI:  `r round(mu.ll,3)`, `r round(mu.ul,3)`
+- Reproduction mean estimate: `r round(mu,3)`
+  - 95% CI:  `r round(mu.ll,3)`, `r round(mu.ul,3)`
   
-- exponential reproduction function rate estimate `r round(b,3)`
-  95% CI:  `r round(b.ll,3)`, `r round(b.ul,3)`
+- Exponential reproduction function rate estimate: `r round(b,3)`
+  - 95% CI:  `r round(b.ll,3)`, `r round(b.ul,3)`
 
 # Intensity Functions for Both Models 
 
