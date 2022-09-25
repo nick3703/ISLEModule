@@ -332,7 +332,7 @@ b = optMarathon$par[3]
 
 ```
 
-Parameter estimates for marathon data (exponential) Hawkes process, using MLE: 
+Parameter estimates for marathon data (exponential) Hawkes process, using MLE (Cheyson and Lang, 2020): 
 
 - baseline intensity  `r round(nu,3)`
 - reproduction mean  `r round(mu,3)`
@@ -500,11 +500,11 @@ for(j in 1:length(daysfromstart_mod2)){
   }
 }
  
-plot(base_x,excite,type="l",ylim=c(0,2),col="red", 
+plot(base_x,excite,type="l",ylim=c(0,2),col="red", lwd = 2.5,
      xlab = "Time (years since 1908)", ylab = "Conditional Intensity")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
-abline(a = exprate, b = 0, lty = 2, col = "blue")
+abline(a = exprate, b = 0, lty = 2, col = "blue", lwd = 3)
 
 ```
 
@@ -534,13 +534,15 @@ plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)",
 
 - Values of compensator for points 1, 2, 3, 4 are 1, 2, 3, 4
 
-- Compensator values at arrivals are "residuals"; if "on schedule" Poisson process with rate 1
+- Compensator values at arrivals are "residuals" (Paparoditis, 2000)
+
+  - if "on schedule" Poisson process with rate 1
 
 ```{r, fig.align='center', out.width="80%"}
 
 plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
      ylab = "Compensator Function")
-points(c(0.5,1,1.5,2),c(1,2,3,4), cex = 2, pch = 3, col = "blue")
+points(c(0.5,1,1.5,2),c(1,2,3,4), cex = 3, pch = 4, col = "red")
 
 ```
 
@@ -555,12 +557,12 @@ points(c(0.5,1,1.5,2),c(1,2,3,4), cex = 2, pch = 3, col = "blue")
 plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
      ylab = "Compensator Function")
 points(c(0.33,0.67,1,1.33,1.67,2),2*c(0.33,0.67,1,1.33,1.67,2),
-       cex = 2, pch = 3, col = "blue" )
+       cex = 3, pch = 4, col = "red" )
 
-plot(c(1:6),c(1:6), type = "l", xlab = "Event Number", 
+plot(c(0:6),c(0:6), type = "l", xlab = "Event Number", 
      ylab = "Residuals")
 points(c(1:6),2*c(0.33,0.67,1,1.33,1.67,2),
-       cex = 2, pch = 3, col = "blue" )
+       cex = 3, pch = 4, col = "red" )
 
 ```
 
@@ -601,8 +603,8 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], repr = optMarathon$par[2], 
                   family = "exp", rate = optMarathon$par[3],
                  xlab = "Event Number", ylab = "Residuals")
-plot(resid)
-abline(0, 1, col="red", lty="dashed")
+plot(resid, col = "red", cex = 1.5, pch = 16)
+abline(0, 1, col="blue", lty="dashed", lwd = 2)
 
 ```
 
@@ -618,8 +620,8 @@ plot(c(0:111),compensate_const, type = "l",
      xlab = "Time (Years since 1908)", ylab = "Compensator")
 resid_const<-residuals(daysfromstart_mod2, fun = exprate, repr = 0, 
                  family = "exp", rate = 0)
-plot(resid_const, xlab = "Event Number", ylab = "Residuals")
-abline(0, 1, col="red", lty="dashed")
+plot(resid_const, xlab = "Event Number", ylab = "Residuals", cex = 1.5)
+abline(0, 1, col="blue", lty="dashed", lwd = 2)
 
 
 ```
@@ -633,11 +635,11 @@ abline(0, 1, col="red", lty="dashed")
 - Hard to tell degree of improvement
 
 ```{r, fig.align='center', out.width="80%"}
-plot(resid_const, xlab = "Event Number", ylab = "Residuals")
-abline(0, 1, col="red", lty="dashed")
-points(resid, col ="blue", pch = 4)
+plot(resid_const, xlab = "Event Number", ylab = "Residuals", col = "black", pch = 4, cex = 1.5)
+abline(0, 1, col="blue", lty="dashed", lwd = 2)
+points(resid, col ="red", pch = 16)
 legend(1, 45, legend=c("Constant Rate", "Hawkes"),
-       col=c("black", "blue"), pch=c(1,4))
+       col=c("black", "red"), pch=c(4,16))
 
 ```
 
@@ -669,12 +671,18 @@ legend(1, 45, legend=c("Constant Rate", "Hawkes"),
 
 - Some indication a "self-exciting" process could explain arrivals better
 
-- As times get faster harder to break the record?
+- Other factors not in model
 
-- Two "outlier" periods impact the models
+  - As times get faster harder to break the record? 
+
+  - Two "outlier" periods impact the models
+  
+  - New technology ("super shoes"), training methods etc.
+  
+  - Magnitude of event: how much faster than previous (inverse?)
 
 
-# Further Work...
+# Further Work
 
 - Explore models for other events: women's marathon, other distances, swimming
 
@@ -683,24 +691,105 @@ legend(1, 45, legend=c("Constant Rate", "Hawkes"),
 
 # SCORE
 
-Here several slides - the overall project - the module for this work (at whatever point we can get it...)
+- NSF Grant, 2022 - 2025
 
+- SCORE with Data: Building a sustainable national network for developing and disseminating
+**\textcolor{blue}{S}**ports **\textcolor{blue}{C}**ontent for **\textcolor{blue}{O}**utreach, **\textcolor{blue}{R}**esearch, and **\textcolor{blue}{E}**ducation in data science
+
+- Carnegie Mellon, Baylor, West Point, University of Pittsburgh, St. Lawrence University, Yale
+
+- Partners across sports industry
+
+  - NBA, NFL, MLB, NHL teams
+  
+  - ESPN
+  
+  - Other sports related organizations (analytics, etc)
+
+# SCORE Goals
+
+- Create a national network 
+  - academic, industry, media and government partners 
+  - elevating data science education
+  - particularly in underrepresented populations and minorities
+
+- Modules based on sports
+  - Develop, implement, evaluate and disseminate an educational framework 
+  - Case-based Learning involving real-world problems and applications
+
+- Educational research on data science education delivery modalities
+
+
+# SCORE Module
+
+https://isle.stat.cmu.edu/SCORE/marathons/
+
+
+\setbeamerfont{caption}{size=\scriptsize}
+
+
+
+::: columns
+
+:::: column
+
+![Kate Sanborn, youngest qualifier US Olympic marathon trials, introduces module](kateOQpng.png){width=60%}
+
+![](isle3.png){width=80%}
+::::
+:::: column
+![Students explore the data interactively in ISLE](isle2.png){height=60%}
+
+![Introduction to Exponential Distribution](isle1.png){height=60%}
+
+::::
+::: 
+
+# SCORE Participation
+
+- Participate as part of network
+
+- Use and test modules
+
+- Create new modules 
+  - Example modules soon available
+  - "HandbooK" with criteria in development
+  - Peer-review similar to R package contribution
+
+Contact us at:
+
+Rod:  Rodney_Sturdivant@baylor.edu
+
+Nick:  nicholas.clark@westpoint.edu
+
+# Notes 
+
+\footnotesize
+
+- Data sources: 
+
+Wikipedia scraped August 12, 2022 (https://en.wikipedia.org/wiki/Marathon_world_record_progression) 
+
+- Poisson process:
+
+https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
+
+- Hawkesbow, R Package for Hawkes process:
+
+Felix Cheysson (2021). hawkesbow: Estimation of Hawkes Processes from Binned Observations.  R package version 1.0.2. https://CRAN.R-project.org/package=hawkesbow
 
 # References
 
-Data source: Wikipedia (https://en.wikipedia.org/wiki/Marathon_world_record_progression) scraped August 12, 2022
+\footnotesize
 
-Poisson process:
-https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459
+Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap inference for Hawkes and general point processes.  Discussion Paper Series, U. Copenhagen Economics. http://dx.doi.org/10.2139/ssrn.3844552
 
-Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap inference for Hawkes and general point processes.  Discussion Paper Series, U. Copenhagen Economics. Available at SSRN: https://ssrn.com/abstract=3844552 or http://dx.doi.org/10.2139/ssrn.3844552
+Cheysson, F., and Lang, G. (2020). Strong mixing condition for Hawkes processes and application to Whittle estimation from count data. arXiv, March. https://arxiv.org/abs/2003.04314.
 
-Hawkes, Alan G. 1971. “Spectra of Some Self-Exciting and Mutually Exciting Point Processes.” Biometrika
-58 (1): 83–90. https://doi.org/10.2307/2334319.
+Hawkes, Alan G. (1971). Spectra of Some Self-Exciting and Mutually Exciting Point Processes. Biometrika 58 (1): 83–90. https://doi.org/10.2307/2334319.
 
-Ogata, Y. (1978). The asymptotic behavior of maximum likelihood estimators
-for stationary point processes. Annals of the Institute of Statistical Mathe-
-matics, 30(2), 243{261.
+Ogata, Y. (1978). The asymptotic behavior of maximum likelihood estimators for stationary point processes. Annals of the Institute of Statistical Mathematics, 30(2), 243-261.
 
-"Hawkesbow" package...
+Paparoditis, E. (2000). Spectral density based goodness-of-fit tests for time series models. Scand. J. Stat. 27 (1): 143–176. https://doi.org/10.1111/1467-9469.00184.
+
 
