@@ -1,13 +1,22 @@
 ---
-title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sports." 
+title: "Is a sub 2 hour marathon in the near future?  Modeling rare events in sports."
 author: Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., West
   Point
 output:
-  beamer_presentation: default
+  beamer_presentation: 
+    theme: "BaylorTheme"
+    colortheme: "bears"
 header-includes:
-- \usepackage{caption}
-- \captionsetup[figure]{labelformat=empty}
-- \titlegraphic{\includegraphics[width = 3cm]{consulting_center_logo.png}}
+  - \AtBeginDocument{\author[Sturdivant, Clark]{Rodney X. Sturdivant, Ph.D., Baylor University and Nick Clark, Ph.D., West Point}}
+  - \titlegraphic{\includegraphics[width = 3cm]{consulting_center_logo} \includegraphics[width = 1.5cm]{cdas}}
+# header-includes:
+# - \usepackage{caption}
+# - \captionsetup[figure]{labelformat=empty}
+# # - \titlegraphic{\includegraphics[width = 3cm]{consulting_center_logo.png}}
+# # - \titlegraphic{\includegraphics[width = 3cm]{cdas.png}}
+# - \pgfdeclareimage[height=.5cm]{logoBaylor}{consulting_center_logo.png}
+# - \pgfdeclareimage[height=.5cm]{logoWP}{cdas.png}
+# - \logo{\pgfuseimage{logoBaylor}\pgfuseimage{logoWP}}
 ---
 
 ```{r setup, include=FALSE}
@@ -52,11 +61,11 @@ library(kableExtra)
 
 </center>
 
-## Are we living in a time of records?
-- Idea:  seems like an increase in records falling, but is it just the nature of randomness?
+- Are we living in a time of records?
+  - Idea:  seems like an increase in records falling, but is it just the nature of randomness?
 
-## How can we address this question?
-## What would randomness look like?
+- How can we address this question?
+- What would randomness look like?
 
 # 
 
