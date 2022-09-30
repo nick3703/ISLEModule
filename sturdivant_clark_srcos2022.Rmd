@@ -86,6 +86,13 @@ Men's Marathon world records since 1908
 
 ```{r}
 record_table_mod<-read_rds("record_table_mod.rds")
+record_table_mod[51,] <- record_table_mod[50,]
+record_table_mod[51,1] <- "2:01:09"
+record_table_mod[51,4] <- "September 25, 2022"
+record_table_mod[51,8] <- lubridate::hms("2:01:09")
+record_table_mod[51,9] <- 2*60*60 + 69
+record_table_mod[51,10] <-lubridate::ymd("2022-09-25")
+record_table_mod[51,11] <-lubridate::ymd("2022-09-25")
 days_between = as.numeric(diff(record_table_mod$Date_ymd))
 daysfromstart <- cumsum(days_between)
 daysfromstart <- c(0,daysfromstart)  ### get data in terms of days from first record (time 0)
@@ -107,6 +114,12 @@ days_between_mod2 = diff(daysfromstart_mod2)
 `r knitr::kable(record_table_mod[46:50,1:5]) %>%
   kable_styling(font_size = 7)`
 
+# Breaking News...
+
+![](kipchoge1.png){width=60%}
+
+![Eliud Kipchoge, Berlin, 2:01:09, September 25, 2022](kipchoge2.png){width=50%}
+
 # Fun Facts
 
 ::: columns
@@ -116,7 +129,8 @@ days_between_mod2 = diff(daysfromstart_mod2)
 - Countries with most records
   - U.K.  12
   - U.S.   7
-  - Japan/Kenya/Ethiopia  5
+  - Kenya 6
+  - Japan/Ethiopia  5
   
 - Largest decrease:  
   - James Clark, US, 1909
@@ -150,9 +164,9 @@ days_between_mod2 = diff(daysfromstart_mod2)
   - Set records 4 times from 1952-1954
 
 - Locations with most records
+  - Berlin Marathon - 9 
+    - Last 8 records
   - Polytechnic Marathon (London) - 8
-  - Berlin Marathon - 8 
-    - Last 7 records
   - Tokyo Marathon - 5
   
 ::::
@@ -334,7 +348,7 @@ $$g^*(t) = \beta e^{-\beta t} $$
 
 ```{r}
 set.seed(1234)
-optMarathon<-mle(daysfromstart_mod2,"Exponential",110.23)  # end date picked number greater than longest times
+optMarathon<-mle(daysfromstart_mod2,"Exponential",114.3)  # end date picked number greater than longest times
 nu = optMarathon$par[1]
 mu = optMarathon$par[2]
 b = optMarathon$par[3]
@@ -384,7 +398,7 @@ $$g(0) = `r round(mu,2)` * `r round(b,2)` e^{-`r round(b,2)` * 0} = `r round(mu,
   - The rate decays to baseline unless another event happens
 
 
-```{r, fig.align='center', out.width="75%"}
+```{r, fig.align='center', out.width="70%"}
 set.seed(777)
 simRecs_Hawkes <- hawkes(100, fun = optMarathon$par[1], repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3]) 
 
@@ -416,6 +430,8 @@ plot(simRecs_Hawkes, intensity = FALSE)
 ```
 
 # Would a Poisson Process model detect "excited" process?
+
+\small
 
 - Simulated Hawkes process using estimates from our data
   - 1000 runs of 100 years each 
@@ -493,7 +509,7 @@ b.ul<-round(b,3)+qnorm(0.975)*se3
 
 ```{r, fig.align='center', out.width="75%"}
 
-base_x<-seq(0,114,.01)
+base_x<-seq(0,optMarathon$end,.01)
 base_y<-rep(nu,length(base_x))
  
 base_y_exc <- mu*b*exp(-b*base_x)+base_y
@@ -547,7 +563,7 @@ plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)",
 
   - if "on schedule" Poisson process with rate 1
 
-```{r, fig.align='center', out.width="80%"}
+```{r, fig.align='center', out.width="70%"}
 
 plot(c(0,1,2),c(0,2,4), type = "l", xlab = "Time (Years)", 
      ylab = "Compensator Function")
@@ -578,9 +594,11 @@ points(c(1:6),2*c(0.33,0.67,1,1.33,1.67,2),
 # Compensator Function for Fitted Hawkes Model
 
 ```{r, fig.align='center', out.width="75%"}
-compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
-                        repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
-plot(c(0:111),compensate, type = "l", xlab = "Time (Years since 1908)",
+compensate<-compensator(daysfromstart_mod2, t=0:optMarathon$end, 
+                        fun = optMarathon$par[1], repr = optMarathon$par[2],
+                        family = "exp", rate = optMarathon$par[3])
+plot(c(0:optMarathon$end), compensate, type = "l", 
+     xlab = "Time (Years since 1908)",
      ylab = "Compensator")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 ```
@@ -592,10 +610,13 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 ```{r, fig.align='center', out.width="75%"}
 
-compensate<-compensator(daysfromstart_mod2, t=0:111, fun = optMarathon$par[1], 
-                        repr = optMarathon$par[2], family = "exp", rate = optMarathon$par[3])
-plot(c(0:111),compensate-optMarathon$par[1]*seq(0,111), type = "l", 
-     xlab = "Time (Years since 1908)", ylab = "Self-excite Portion of Compensator")
+compensate<-compensator(daysfromstart_mod2, t=0:optMarathon$end, 
+                        fun = optMarathon$par[1], 
+                        repr = optMarathon$par[2], family = "exp", 
+                        rate =  optMarathon$par[3])
+plot(c(0:optMarathon$end),compensate-optMarathon$par[1]*seq(0,optMarathon$end), 
+     type = "l", xlab = "Time (Years since 1908)", 
+     ylab = "Self-excite Portion of Compensator")
 points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 
 ```
@@ -609,8 +630,9 @@ points(daysfromstart_mod2,rep(0,length(daysfromstart_mod2)), pch=3)
 - Jump up event 41:  1998 record (after 10 year gap)
 
 ```{r, fig.align='center', out.width="75%"}
-resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], repr = optMarathon$par[2], 
-                  family = "exp", rate = optMarathon$par[3],
+resid<-residuals(daysfromstart_mod2, fun = optMarathon$par[1], 
+                 repr = optMarathon$par[2], family = "exp", 
+                 rate = optMarathon$par[3],
                  xlab = "Event Number", ylab = "Residuals")
 plot(resid, col = "red", cex = 1.5, pch = 16)
 abline(0, 1, col="blue", lty="dashed", lwd = 2)
@@ -623,9 +645,10 @@ abline(0, 1, col="blue", lty="dashed", lwd = 2)
 
 ```{r, fig.show="hold", out.width="40%"}
 
-compensate_const<-compensator(daysfromstart_mod2, t=0:111, fun = exprate, repr = 0, 
-                        family = "exp", rate = 0)
-plot(c(0:111),compensate_const, type = "l",
+compensate_const<-compensator(daysfromstart_mod2, t=0:optMarathon$end,
+                              fun = exprate, repr = 0,  
+                              family = "exp", rate = 0)
+plot(c(0:optMarathon$end),compensate_const, type = "l",
      xlab = "Time (Years since 1908)", ylab = "Compensator")
 resid_const<-residuals(daysfromstart_mod2, fun = exprate, repr = 0, 
                  family = "exp", rate = 0)
@@ -644,7 +667,8 @@ abline(0, 1, col="blue", lty="dashed", lwd = 2)
 - Hard to tell degree of improvement
 
 ```{r, fig.align='center', out.width="80%"}
-plot(resid_const, xlab = "Event Number", ylab = "Residuals", col = "black", pch = 4, cex = 1.5)
+plot(resid_const, xlab = "Event Number", ylab = "Residuals", 
+     col = "black", pch = 4, cex = 1.5)
 abline(0, 1, col="blue", lty="dashed", lwd = 2)
 points(resid, col ="red", pch = 16)
 legend(1, 45, legend=c("Constant Rate", "Hawkes"),
@@ -656,6 +680,12 @@ legend(1, 45, legend=c("Constant Rate", "Hawkes"),
 
 
 # Comparing Models - Overdispersion
+
+- "Posterior predictive P values" (Gelman et al, 1996)
+
+- Simulate from based on the fitted model parameters
+
+- Here we use the "overdispersion" (measured by variance/mean ratio)
 
 ::: columns
 
@@ -742,14 +772,14 @@ https://isle.stat.cmu.edu/SCORE/marathons/
 
 :::: column
 
-![Kate Sanborn, youngest qualifier US Olympic marathon trials, introduces module](kateOQpng.png){width=60%}
+![Kate Sanborn, youngest qualifier US Olympic marathon trials, introduces module](kateOQpng.png){width=50%}
 
-![](isle3.png){width=80%}
+![](isle3.png){width=70%}
 ::::
 :::: column
-![Students explore the data interactively in ISLE](isle2.png){height=60%}
+![Students explore the data interactively in ISLE](isle2.png){height=50%}
 
-![Introduction to Exponential Distribution](isle1.png){height=60%}
+![](isle1.png){height=50%}
 
 ::::
 ::: 
@@ -794,6 +824,8 @@ Felix Cheysson (2021). hawkesbow: Estimation of Hawkes Processes from Binned Obs
 Cavaliere, G., Lu, Y., Rahbek, A., and Østergaard, Jacob (2021). Bootstrap inference for Hawkes and general point processes.  Discussion Paper Series, U. Copenhagen Economics. http://dx.doi.org/10.2139/ssrn.3844552
 
 Cheysson, F., and Lang, G. (2020). Strong mixing condition for Hawkes processes and application to Whittle estimation from count data. arXiv, March. https://arxiv.org/abs/2003.04314.
+
+Gelman, A., Meng, X.L. and Stern, H.S. (1996). Posterior Predictive Assessment of Model Fitness via Realized Discrepancies. Statistica Sinica, 6, 733-807.
 
 Hawkes, Alan G. (1971). Spectra of Some Self-Exciting and Mutually Exciting Point Processes. Biometrika 58 (1): 83–90. https://doi.org/10.2307/2334319.
 
